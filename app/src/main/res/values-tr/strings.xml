@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VIDENTRA</string>
+    <string name="app_tagline">Watch Freely. Live Fully.</string>
+
+    <!-- General -->
+    <string name="retry">Yeniden Dene</string>
+    <string name="back">Geri</string>
+    <string name="cancel">İptal</string>
+    <string name="delete">Sil</string>
+    <string name="search">Ara</string>
+    <string name="no_internet">İnternet Bağlantısı Yok</string>
+    <string name="error_prefix">Hata: %s</string>
+    <string name="clear">Temizle</string>
+    <string name="close">Kapat</string>
+
+    <!-- Home -->
+    <string name="tab_for_you">Sizin İçin</string>
+    <string name="tab_subscriptions">Abonelikler</string>
+    <string name="personalized_title">Sizin İçin Kişiselleştirildi</string>
+    <string name="personalized_desc">Arama geçmişinize dayanarak</string>
+    <string name="no_subscriptions_videos">Henüz aboneliklerinizden video yok.</string>
+    <string name="no_videos_found">Video bulunamadı.</string>
+    <string name="continue_playing">Oynatmaya Devam Et</string>
+
+    <!-- Player -->
+    <string name="quality">Kalite</string>
+    <string name="playback_speed">Oynatma Hızı</string>
+    <string name="description">Açıklama</string>
+    <string name="more">Daha Fazla</string>
+    <string name="related_videos">İlgili Videolar</string>
+    <string name="download">İndir</string>
+    <string name="downloaded">İndirildi</string>
+
+    <!-- Player Action & Repeat Modes -->
+    <string name="repeat_off">Tekrar Kapalı</string>
+    <string name="repeat_one">Tekrar 1</string>
+    <string name="repeat_play_next">Otomatik Oynatma</string>
+    <string name="repeat_mode">Tekrar Modu</string>
+    <string name="downloaded_videos">İndirilen Videolar</string>
+    <string name="offline_downloads">Çevrimdışı İndirmeler</string>
+    <string name="added_to_favorites">Beğenilen Videolara Eklendi</string>
+    <string name="removed_from_favorites">Beğenilen Videolardan Kaldırıldı</string>
+    <string name="downloading_started">İndirme başladı</string>
+    <string name="connection_lost_waiting">Bağlantı kesildi. Devam etmek için bekleniyor...</string>
+    <string name="no_previous_video">Oturumda önceki video yok</string>
+    <string name="skipped_segment">%s atlandı</string>
+
+    <string name="like">Beğen</string>
+    <string name="liked">Beğenildi</string>
+    <string name="save">Kaydet</string>
+    <string name="saved">Kaydedildi</string>
+    <string name="share">Paylaş</string>
+    <string name="info">Bilgi</string>
+    <string name="subscribe">Abone Ol</string>
+    <string name="subscribed">Abone Olundu</string>
+    <string name="auto">Otomatik</string>
+    <string name="normal_speed">Normal</string>
+    <string name="no_description">Açıklama bulunmuyor</string>
+    <string name="loading">Yükleniyor...</string>
+    <string name="toggle_subtitles">Altyazıları Aç/Kapat</string>
+    <string name="settings">Ayarlar</string>
+    <string name="waiting_for_connection">Bağlantı bekleniyor...</string>
+
+    <!-- Library -->
+    <string name="library">Kitaplık</string>
+    <string name="history">Geçmiş</string>
+    <string name="subscriptions">Abonelikler</string>
+    <string name="downloads">İndirmeler</string>
+    <string name="favorites">Beğenilen Videolar</string>
+    <string name="see_all">Tümünü gör</string>
+    <string name="no_history">Henüz izleme geçmişi yok</string>
+    <string name="no_history_desc">İzlediğiniz videolar burada görünecektir.</string>
+    <string name="no_downloads">Henüz indirme yok</string>
+    <string name="no_downloads_desc">Dilediğiniz zaman çevrimdışı izlemek için videolar indirin.</string>
+    <string name="no_favorites">Henüz beğenilen video yok</string>
+    <string name="no_favorites_desc">Beğendiğiniz videolar burada görünecektir.</string>
+    <string name="no_subscriptions">Henüz abonelik yok</string>
+    <string name="no_subscriptions_desc">Favori kanallarınızı burada görmek için abone olun.</string>
+    <string name="no_playlists">Henüz favori oynatma listesi yok</string>
+    <string name="no_playlists_desc">Kaydedilen oynatma listeleriniz burada gösterilecektir.</string>
+    <string name="discover_videos">Videoları Keşfet</string>
+    <string name="remove_from_favorites">Beğenilen Videolardan Çıkar</string>
+    <string name="add_to_favorites">Beğenilen Videolara Ekle</string>
+    <string name="delete_download_title">İndirme Silinsin mi?</string>
+    <string name="delete_download_desc">Bu indirilmiş videoyu silmek istediğinizden emin misiniz?</string>
+
+    <!-- Search -->
+    <string name="search_placeholder">PlayTube\'da Ara</string>
+    <string name="discover_new">Yeni bir şeyler keşfet</string>
+    <string name="recent_searches">Son aramalar</string>
+    <string name="clear_all">Tümünü temizle</string>
+    <string name="sort_relevance">Tümü</string>
+    <string name="sort_newest">En Yeni</string>
+    <string name="sort_most_viewed">En Çok İzlenen</string>
+    <string name="sort_top_rated">En Yüksek Puanlı</string>
+
+    <!-- Channel & Playlist -->
+    <string name="videos">Videolar</string>
+    <string name="playlists">Oynatma Listeleri</string>
+    <string name="subscribers_hidden">Aboneler gizli</string>
+    <string name="subscribers_count">%s abone</string>
+    <string name="playlist">Oynatma Listesi</string>
+    <string name="by_author">%s tarafından</string>
+    <string name="download_all">Tümünü İndir</string>
+    <string name="video_count">%s video</string>
+    <string name="background_play">Arkaplanda Çal</string>
+    <string name="background_play_desc">Uygulama simge durumuna küçültüldüğünde ses çalmaya devam etsin</string>
+
+    <!-- Final Audit Additions -->
+    <string name="back_online">Tekrar Çevrimiçi</string>
+    <string name="offline_dialog_text">Şu anda çevrimdışısınız. İndirmelerinizi kontrol edin.</string>
+    <string name="go_to_downloads">İndirmelere Git</string>
+    <string name="incognito_label">Gizli</string>
+    <string name="smart_cleanup_title">Akıllı Temizlik</string>
+    <string name="smart_cleanup_desc">Bu işlem, zaten izlemeyi bitirdiğiniz (&gt;%90) tüm indirilmiş videoları kaldıracaktır.</string>
+    <string name="clean_now">Şimdi Temizle</string>
+    <string name="clear_history_title">İzleme geçmişi temizlensin mi?</string>
+    <string name="clear_history_desc">Tüm izleme geçmişinizi temizlemek istediğinizden emin misiniz? Bu işlem geri alınamaz.</string>
+    <string name="pause_watch_history">İzleme geçmişini duraklat</string>
+    <string name="not_interested">İlgilenmiyorum</string>
+    <string name="up_next">Sıradaki</string>
+    <string name="play_now">Şimdi Oynat</string>
+    <string name="search_offline">Çevrimdışı ara...</string>
+    <string name="duration">Süre</string>
+    <string name="apply">Uygula</string>
+    <string name="close_app_on_finish">Bittiğinde uygulamayı kapat</string>
+    <string name="close_app_desc">PlayTube\'u kapatarak pil tasarrufu yapın</string>
+    <string name="timer_minutes_placeholder">%d dakika</string>
+    <string name="subtitles">Altyazılar</string>
+    <string name="off">Kapalı</string>
+    <string name="history_cleared">Geçmiş temizlendi</string>
+    <string name="ends_at">%s zamanında biter</string>
+    <string name="video_quality">Video Kalitesi</string>
+    <string name="video">Video</string>
+    <string name="audio">Ses</string>
+    <string name="high_quality">Yüksek Kalite</string>
+    <string name="download_quality">İndirme Kalitesi</string>
+    <string name="playlist_download_quality">Oynatma Listesi İndirme Kalitesi</string>
+    <string name="auto_generated">Otomatik oluşturuldu</string>
+    <string name="app_language">Uygulama Dili</string>
+    <string name="language_auto_generated">%1$s (%2$s)</string>
+
+    <!-- Sleep Timer -->
+    <string name="sleep_timer">Uyku Zamanlayıcısı</string>
+    <string name="timer_off">Kapalı</string>
+    <string name="timer_15">15 dakika</string>
+    <string name="timer_30">30 dakika</string>
+    <string name="timer_45">45 dakika</string>
+    <string name="timer_60">60 dakika</string>
+    <string name="timer_end_of_video">Videonun Sonunda</string>
+    <string name="timer_minutes_remaining">%d dakika kaldı</string>
+    <string name="timer_end_of_video_active">Videonun sonunda durur</string>
+
+    <!-- Settings -->
+    <string name="about_developer">Geliştirici Hakkında</string>
+    <string name="developed_by">Srivatsan tarafından geliştirildi</string>
+    <string name="ok">Tamam</string>
+    <string name="confirm">Onayla</string>
+    <string name="clear_all_downloads_title">Tüm indirmeler temizlensin mi?</string>
+    <string name="clear_all_downloads_desc">Tüm indirilmiş videoları silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</string>
+    <string name="clear_learned_data_title">Öğrenilen veriler temizlensin mi?</string>
+    <string name="clear_learned_data_desc">Bu, öğrenilen tüm kullanıcı ilgi alanlarını silecek ve öneri motorunu sıfırlayacaktır. Bu işlem geri alınamaz.</string>
+    <string name="settings_group_update">Uygulama Güncellemesi</string>
+    <string name="settings_auto_update">GitHub Sürümlerini Otomatik Kontrol Et</string>
+    <string name="settings_auto_update_desc">GitHub\'da yeni bir sürüm mevcut olduğunda bildir</string>
+    <string name="update_available">Yeni Güncelleme Mevcut: %s</string>
+    <string name="download_from_github">GitHub\'dan İndir</string>
+    <string name="settings_group_history_privacy">Geçmiş ve Gizlilik</string>
+    <string name="settings_view_history">Geçmişi görüntüle</string>
+    <string name="settings_view_history_desc">İzlediğiniz videoları yönetin</string>
+    <string name="settings_pause_search_history">Arama geçmişini duraklat</string>
+    <string name="settings_pause_search_history_desc">Öneriler de duraklatılacak</string>
+    <string name="settings_pip">Resim içinde Resim (PiP)</string>
+    <string name="settings_pip_desc">Küçük bir pencerede izlemeye devam edin</string>
+    <string name="settings_data_backup">Veri ve Yedekleme</string>
+    <string name="settings_data_backup_desc">Takeout ve yerel yedekleri içe aktar</string>
+    <string name="settings_pause_recommendations">Önerileri Duraklat</string>
+    <string name="settings_pause_recommendations_desc">İlgi alanlarınızı öğrenmeyi geçici olarak durdurun</string>
+    <string name="settings_clear_learned_data">Öğrenilen verileri temizle</string>
+    <string name="settings_clear_learned_data_desc_item">Öneri motoru profilini sıfırla</string>
+    <string name="settings_group_appearance_playback">Görünüm ve Oynatma</string>
+    <string name="settings_player_gestures">Oynatıcı Hareketleri</string>
+    <string name="settings_player_gestures_desc">Ses ve parlaklık için kaydırma hareketlerini etkinleştir</string>
+    <string name="settings_material_you">Material You</string>
+    <string name="settings_material_you_desc">Cihaz tema rengine uyum sağlar</string>
+    <string name="system_default">Sistem Varsayılanı</string>
+    <string name="settings_subtitle_styles">Altyazı Stilleri</string>
+    <string name="settings_subtitle_styles_desc">Yazı tipi boyutunu ve arka planı özelleştirin</string>
+    <string name="subtitle_font_size">Yazı Tipi Boyutu: %dsp</string>
+    <string name="subtitle_background_opacity">Arka Plan Opaklığı: %d%%</string>
+    <string name="subtitle_preview">Altyazı Önizleme</string>
+    <string name="settings_group_content">İçerik</string>
+    <string name="settings_clear_downloads">Tüm indirmeleri temizle</string>
+    <string name="settings_clear_downloads_desc">Tüm çevrimdışı videoları kaldır</string>
+    <string name="settings_group_about">Hakkında</string>
+    <string name="settings_about_developer">Geliştirici Hakkında</string>
+    <string name="settings_about_developer_desc">Oluşturucu hakkında bilgiler</string>
+    <string name="settings_view_source">Kaynak kodunu görüntüle</string>
+    <string name="settings_view_source_desc">GitHub\'daki projeye göz atın</string>
+    <string name="settings_app_version">Uygulama Sürümü</string>
+
+    <!-- Import Errors -->
+    <string name="error_history_not_found">ZIP veya seçim içinde geçmiş dosyası bulunamadı</string>
+    <string name="error_subscriptions_not_found">ZIP veya seçim içinde abonelikler dosyası bulunamadı</string>
+    <string name="error_malformed_history">Hatalı geçmiş dosyası formatı</string>
+    <string name="error_malformed_csv">Hatalı abonelikler dosyası formatı</string>
+    <string name="importing_items">%d öğe içe aktarıldı...</string>
+</resources>
