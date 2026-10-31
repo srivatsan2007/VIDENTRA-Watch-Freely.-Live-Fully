@@ -60,6 +60,8 @@ import com.arslandaim.playtube.services.PlaybackService
 import com.arslandaim.playtube.ui.components.GlassSurface
 import com.arslandaim.playtube.ui.components.WelcomeDialog
 import com.arslandaim.playtube.ui.components.DeveloperBirthdayDialog
+import com.arslandaim.playtube.ui.components.SignInRequiredDialog
+import com.arslandaim.playtube.ui.components.YouTubeAuthSheet
 import com.arslandaim.playtube.ui.components.main.OfflineBottomBanner
 import com.arslandaim.playtube.ui.components.main.PlayTubeTopAppBar
 import com.arslandaim.playtube.ui.components.main.RestorationBanner
@@ -398,7 +400,9 @@ class MainActivity : AppCompatActivity() {
                         currentVideo?.let { miniPlayerManager.minimize(it) }
                         navController.navigate(Destination.Channel(url))
                     },
-                    onVideoClick = { playerViewModel.loadVideo(it) },
+                    onVideoClick = { video ->
+                        mainViewModel.handleVideoClick(video) { playerViewModel.loadVideo(it) }
+                    },
                     onAddToPlaylistClick = { mainViewModel.showPlaylistSelection(it) },
                     content = {}
                 )
@@ -462,6 +466,29 @@ class MainActivity : AppCompatActivity() {
                 if (showBirthdayDialog) {
                     DeveloperBirthdayDialog(
                         onDismiss = { mainViewModel.dismissBirthdayDialog() }
+                    )
+                }
+
+                // Global Sign In Required Dialog (Appears when clicking a video before signing in)
+                val showSignInRequiredDialog by mainViewModel.showSignInRequiredDialog.collectAsStateWithLifecycle()
+                if (showSignInRequiredDialog) {
+                    SignInRequiredDialog(
+                        onSignInClick = { mainViewModel.onOpenAuthSheet() },
+                        onContinueAsGuest = {
+                            mainViewModel.onContinueAsGuest { playerViewModel.loadVideo(it) }
+                        },
+                        onDismiss = { mainViewModel.dismissSignInRequiredDialog() }
+                    )
+                }
+
+                // Global YouTube / Google Auth Sheet (Sandboxed login webview)
+                val showAuthSheet by mainViewModel.showAuthSheet.collectAsStateWithLifecycle()
+                if (showAuthSheet) {
+                    YouTubeAuthSheet(
+                        onDismiss = { mainViewModel.dismissAuthSheet() },
+                        onAuthSuccess = { cookies, name, email, avatar ->
+                            mainViewModel.onAuthSuccess(cookies, name, email, avatar) { playerViewModel.loadVideo(it) }
+                        }
                     )
                 }
 
@@ -579,7 +606,10 @@ class MainActivity : AppCompatActivity() {
                 val query = data.getQueryParameter("search_query") ?: data.getQueryParameter("q")
                 if (!query.isNullOrBlank()) navController.navigate(Destination.Search(query)) { launchSingleTop = true }
             }
-            videoId.isNotBlank() -> playerViewModel.loadVideo(VideoItem(id = videoId, title = "Loading...", thumbnailUrl = "", uploaderName = "", uploaderUrl = null, viewCount = 0, uploadDate = null, duration = 0))
+            videoId.isNotBlank() -> {
+                val deepLinkVideo = VideoItem(id = videoId, title = "Loading...", thumbnailUrl = "", uploaderName = "", uploaderUrl = null, viewCount = 0, uploadDate = null, duration = 0)
+                mainViewModel.handleVideoClick(deepLinkVideo) { playerViewModel.loadVideo(it) }
+            }
         }
         intent.action = null
     }

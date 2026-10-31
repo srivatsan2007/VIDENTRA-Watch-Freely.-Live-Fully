@@ -55,6 +55,15 @@ class SettingsViewModel @Inject constructor(
     val isAmbientModeEnabled: StateFlow<Boolean> = preferencesManager.isAmbientModeEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val isYouTubeLoggedIn: StateFlow<Boolean> = preferencesManager.isYouTubeLoggedIn
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val youtubeUserName: StateFlow<String?> = preferencesManager.youtubeUserName
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val youtubeUserEmail: StateFlow<String?> = preferencesManager.youtubeUserEmail
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     val isPlayerGesturesEnabled: StateFlow<Boolean> = preferencesManager.isPlayerGesturesEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
@@ -111,6 +120,14 @@ class SettingsViewModel @Inject constructor(
     fun setAmbientModeEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferencesManager.setAmbientModeEnabled(enabled)
+        }
+    }
+
+    fun signOutYouTube() {
+        viewModelScope.launch {
+            preferencesManager.clearYouTubeAccount()
+            preferencesManager.setGuestBypass(false)
+            android.webkit.CookieManager.getInstance().removeAllCookies(null)
         }
     }
 

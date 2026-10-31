@@ -62,6 +62,30 @@ class MainViewModel @Inject constructor(
     val isOnboardingCompleted: StateFlow<Boolean?> = preferencesManager.isOnboardingCompleted
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val isYouTubeLoggedIn: StateFlow<Boolean> = preferencesManager.isYouTubeLoggedIn
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val isGuestBypass: StateFlow<Boolean> = preferencesManager.isGuestBypass
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val youtubeUserName: StateFlow<String?> = preferencesManager.youtubeUserName
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val youtubeUserEmail: StateFlow<String?> = preferencesManager.youtubeUserEmail
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val youtubeUserAvatar: StateFlow<String?> = preferencesManager.youtubeUserAvatar
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    private val _showSignInRequiredDialog = MutableStateFlow(false)
+    val showSignInRequiredDialog: StateFlow<Boolean> = _showSignInRequiredDialog.asStateFlow()
+
+    private val _showAuthSheet = MutableStateFlow(false)
+    val showAuthSheet: StateFlow<Boolean> = _showAuthSheet.asStateFlow()
+
+    private val _pendingVideo = MutableStateFlow<com.arslandaim.playtube.domain.model.VideoItem?>(null)
+    val pendingVideo: StateFlow<com.arslandaim.playtube.domain.model.VideoItem?> = _pendingVideo.asStateFlow()
+
     fun toggleIncognitoMode() {
         viewModelScope.launch {
             val current = preferencesManager.isIncognitoMode.first()
@@ -175,6 +199,71 @@ class MainViewModel @Inject constructor(
             _playlistSelectionState.value.video?.let { video ->
                 addVideoToPlaylist(id.toInt(), video)
             }
+        }
+    }
+
+    fun handleVideoClick(
+        video: com.arslandaim.playtube.domain.model.VideoItem,
+        onAuthorizedPlay: (com.arslandaim.playtube.domain.model.VideoItem) -> Unit
+    ) {
+        val isLoggedIn = isYouTubeLoggedIn.value
+        val isGuest = isGuestBypass.value
+
+        if (isLoggedIn || isGuest) {
+            onAuthorizedPlay(video)
+        } else {
+            _pendingVideo.value = video
+            _showSignInRequiredDialog.value = true
+        }
+    }
+
+    fun onContinueAsGuest(onAuthorizedPlay: (com.arslandaim.playtube.domain.model.VideoItem) -> Unit) {
+        viewModelScope.launch {
+            preferencesManager.setGuestBypass(true)
+            _showSignInRequiredDialog.value = false
+            _pendingVideo.value?.let { video ->
+                onAuthorizedPlay(video)
+                _pendingVideo.value = null
+            }
+        }
+    }
+
+    fun onOpenAuthSheet() {
+        _showSignInRequiredDialog.value = false
+        _showAuthSheet.value = true
+    }
+
+    fun dismissSignInRequiredDialog() {
+        _showSignInRequiredDialog.value = false
+        _pendingVideo.value = null
+    }
+
+    fun dismissAuthSheet() {
+        _showAuthSheet.value = false
+    }
+
+    fun onAuthSuccess(
+        cookies: String,
+        userName: String?,
+        userEmail: String?,
+        avatarUrl: String?,
+        onAuthorizedPlay: (com.arslandaim.playtube.domain.model.VideoItem) -> Unit
+    ) {
+        viewModelScope.launch {
+            preferencesManager.saveYouTubeAccount(cookies, userName, userEmail, avatarUrl)
+            _showAuthSheet.value = false
+            _pendingVideo.value?.let { video ->
+                onAuthorizedPlay(video)
+                _pendingVideo.value = null
+            }
+        }
+    }
+
+    fun signOutYouTube() {
+        viewModelScope.launch {
+            preferencesManager.clearYouTubeAccount()
+            preferencesManager.setGuestBypass(false)
+            android.webkit.CookieManager.getInstance().removeAllCookies(null)
         }
     }
 }

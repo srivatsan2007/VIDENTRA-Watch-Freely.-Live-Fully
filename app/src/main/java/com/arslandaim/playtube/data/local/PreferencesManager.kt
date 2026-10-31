@@ -128,6 +128,54 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
             preferences[AMBIENT_MODE_ENABLED] ?: true
         }
 
+    open val isYouTubeLoggedIn: Flow<Boolean> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[IS_YOUTUBE_LOGGED_IN] ?: false
+        }
+
+    open val isGuestBypass: Flow<Boolean> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[YOUTUBE_GUEST_BYPASS] ?: false
+        }
+
+    open val youtubeUserName: Flow<String?> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[YOUTUBE_USER_NAME]
+        }
+
+    open val youtubeUserEmail: Flow<String?> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[YOUTUBE_USER_EMAIL]
+        }
+
+    open val youtubeUserAvatar: Flow<String?> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[YOUTUBE_USER_AVATAR]
+        }
+
+    open val youtubeAuthCookies: Flow<String?> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[YOUTUBE_AUTH_COOKIES]
+        }
+
     open val isRecommendationsPaused: Flow<Boolean> = dataStore.data
         .catch { exception ->
             if (exception is IOException) {
@@ -306,6 +354,37 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
         }
     }
 
+    suspend fun saveYouTubeAccount(
+        cookies: String,
+        userName: String? = null,
+        userEmail: String? = null,
+        avatarUrl: String? = null
+    ) {
+        dataStore.edit { preferences ->
+            preferences[IS_YOUTUBE_LOGGED_IN] = true
+            preferences[YOUTUBE_AUTH_COOKIES] = cookies
+            if (userName != null) preferences[YOUTUBE_USER_NAME] = userName
+            if (userEmail != null) preferences[YOUTUBE_USER_EMAIL] = userEmail
+            if (avatarUrl != null) preferences[YOUTUBE_USER_AVATAR] = avatarUrl
+        }
+    }
+
+    suspend fun clearYouTubeAccount() {
+        dataStore.edit { preferences ->
+            preferences[IS_YOUTUBE_LOGGED_IN] = false
+            preferences.remove(YOUTUBE_AUTH_COOKIES)
+            preferences.remove(YOUTUBE_USER_NAME)
+            preferences.remove(YOUTUBE_USER_EMAIL)
+            preferences.remove(YOUTUBE_USER_AVATAR)
+        }
+    }
+
+    suspend fun setGuestBypass(bypass: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[YOUTUBE_GUEST_BYPASS] = bypass
+        }
+    }
+
     suspend fun setRecommendationsPaused(paused: Boolean) {
         dataStore.edit { preferences ->
             preferences[RECOMMENDATIONS_PAUSED] = paused
@@ -419,6 +498,12 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
         val AUTO_UPDATE_ENABLED = booleanPreferencesKey("auto_update_enabled")
         val DYNAMIC_COLOR_ENABLED = booleanPreferencesKey("dynamic_color_enabled")
         val AMBIENT_MODE_ENABLED = booleanPreferencesKey("ambient_mode_enabled")
+        val IS_YOUTUBE_LOGGED_IN = booleanPreferencesKey("is_youtube_logged_in")
+        val YOUTUBE_GUEST_BYPASS = booleanPreferencesKey("youtube_guest_bypass")
+        val YOUTUBE_USER_NAME = stringPreferencesKey("youtube_user_name")
+        val YOUTUBE_USER_EMAIL = stringPreferencesKey("youtube_user_email")
+        val YOUTUBE_USER_AVATAR = stringPreferencesKey("youtube_user_avatar")
+        val YOUTUBE_AUTH_COOKIES = stringPreferencesKey("youtube_auth_cookies")
         val RECOMMENDATIONS_PAUSED = booleanPreferencesKey("recommendations_paused")
         val AUTOPLAY_ENABLED = booleanPreferencesKey("autoplay_enabled")
         val INCOGNITO_MODE = booleanPreferencesKey("incognito_mode")

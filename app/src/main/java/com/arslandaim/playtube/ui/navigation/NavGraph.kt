@@ -53,6 +53,10 @@ fun NavGraph(
     val libraryViewModel: LibraryViewModel = hiltViewModel(activity)
     val mainViewModel: MainViewModel = hiltViewModel(activity)
 
+    val onVideoClickWithAuth: (com.arslandaim.playtube.domain.model.VideoItem) -> Unit = { video ->
+        mainViewModel.handleVideoClick(video) { playerViewModel.loadVideo(it) }
+    }
+
     val springSpec = spring<Float>(
         dampingRatio = Spring.DampingRatioNoBouncy,
         stiffness = Spring.StiffnessMediumLow
@@ -115,9 +119,7 @@ fun NavGraph(
                 viewModel = viewModel,
                 libraryViewModel = libraryViewModel,
                 onBarsVisibilityChange = onBarsVisibilityChange,
-                onVideoClick = { video ->
-                    playerViewModel.loadVideo(video)
-                },
+                onVideoClick = onVideoClickWithAuth,
                 onChannelClick = { channelUrl: String ->
                     navController.navigate(Destination.Channel(channelUrl))
                 },
@@ -137,9 +139,7 @@ fun NavGraph(
                 viewModel = viewModel,
                 libraryViewModel = libraryViewModel,
                 onBarsVisibilityChange = onBarsVisibilityChange,
-                onVideoClick = { video ->
-                    playerViewModel.loadVideo(video)
-                },
+                onVideoClick = onVideoClickWithAuth,
                 onChannelClick = { channelUrl: String ->
                     navController.navigate(Destination.Channel(channelUrl))
                 },
@@ -173,9 +173,7 @@ fun NavGraph(
             LibraryScreen(
                 viewModel = libraryViewModel,
                 onBarsVisibilityChange = onBarsVisibilityChange,
-                onVideoClick = { video ->
-                    playerViewModel.loadVideo(video)
-                },
+                onVideoClick = onVideoClickWithAuth,
                 onAddToPlaylistClick = { video ->
                     mainViewModel.showPlaylistSelection(video)
                 },
@@ -195,9 +193,7 @@ fun NavGraph(
                 viewModel = libraryViewModel,
                 onBarsVisibilityChange = onBarsVisibilityChange,
                 onBack = { navController.popBackStack() },
-                onVideoClick = { video ->
-                    playerViewModel.loadVideo(video)
-                },
+                onVideoClick = onVideoClickWithAuth,
                 onAddToPlaylistClick = { video ->
                     mainViewModel.showPlaylistSelection(video)
                 }
@@ -211,6 +207,7 @@ fun NavGraph(
                 updateViewModel = updateViewModel,
                 onViewHistory = { navController.navigate(Destination.History) { launchSingleTop = true } },
                 onDataManagement = { navController.navigate(Destination.DataManagement) },
+                onOpenSignIn = { mainViewModel.onOpenAuthSheet() },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -228,9 +225,7 @@ fun NavGraph(
                 historyViewModel = libraryViewModel,
                 onBarsVisibilityChange = onBarsVisibilityChange,
                 onBack = { navController.popBackStack() },
-                onVideoClick = { video ->
-                    playerViewModel.loadVideo(video)
-                },
+                onVideoClick = onVideoClickWithAuth,
                 onAddToPlaylistClick = { video ->
                     mainViewModel.showPlaylistSelection(video)
                 },
@@ -255,9 +250,7 @@ fun NavGraph(
                     }
                 },
                 onBack = { navController.popBackStack() },
-                onVideoClick = { video ->
-                    playerViewModel.loadVideo(video)
-                },
+                onVideoClick = onVideoClickWithAuth,
                 onAddToPlaylistClick = { video ->
                     mainViewModel.showPlaylistSelection(video)
                 },
@@ -280,11 +273,13 @@ fun NavGraph(
                 },
                 onBack = { navController.popBackStack() },
                 onVideoClick = { video ->
-                    playerViewModel.loadVideo(
-                        video = video,
-                        playlistId = playlist.playlistId,
-                        playlistTitle = (viewModel.uiState.value as? PlaylistUiState.Success)?.details?.title
-                    )
+                    mainViewModel.handleVideoClick(video) {
+                        playerViewModel.loadVideo(
+                            video = it,
+                            playlistId = playlist.playlistId,
+                            playlistTitle = (viewModel.uiState.value as? PlaylistUiState.Success)?.details?.title
+                        )
+                    }
                 },
                 onAddToPlaylistClick = { video ->
                     mainViewModel.showPlaylistSelection(video)
@@ -310,9 +305,7 @@ fun NavGraph(
                 updateViewModel = updateViewModel,
                 libraryViewModel = libraryViewModel,
                 onBarsVisibilityChange = onBarsVisibilityChange,
-                onVideoClick = { video ->
-                    playerViewModel.loadVideo(video)
-                },
+                onVideoClick = onVideoClickWithAuth,
                 onAddToPlaylistClick = { video ->
                     mainViewModel.showPlaylistSelection(video)
                 },

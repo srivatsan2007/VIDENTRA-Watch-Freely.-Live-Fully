@@ -7,6 +7,8 @@ package com.arslandaim.playtube.ui.components.main
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
@@ -117,6 +119,34 @@ fun PlayTubeTopAppBar(
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(24.dp)
                 )
+            }
+
+            val isYouTubeLoggedIn by mainViewModel.isYouTubeLoggedIn.collectAsStateWithLifecycle()
+            val youtubeUserName by mainViewModel.youtubeUserName.collectAsStateWithLifecycle()
+
+            IconButton(onClick = {
+                if (isYouTubeLoggedIn) {
+                    navController.navigate(Destination.Settings)
+                } else {
+                    mainViewModel.onOpenAuthSheet()
+                }
+            }) {
+                Box(contentAlignment = Alignment.TopEnd) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = if (isYouTubeLoggedIn) youtubeUserName ?: "Account" else "Sign in",
+                        tint = if (isYouTubeLoggedIn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    if (isYouTubeLoggedIn) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF4CAF50))
+                        )
+                    }
+                }
             }
 
             IconButton(onClick = { navController.navigate(Destination.Settings) }) {

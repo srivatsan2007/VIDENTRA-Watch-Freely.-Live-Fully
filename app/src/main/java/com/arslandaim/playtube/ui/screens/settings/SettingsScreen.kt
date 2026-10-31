@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Recommend
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
@@ -95,8 +96,11 @@ fun SettingsScreen(
     updateViewModel: UpdateViewModel,
     onViewHistory: () -> Unit,
     onDataManagement: () -> Unit,
+    onOpenSignIn: () -> Unit = {},
     onBack: () -> Unit
 ) {
+    val isYouTubeLoggedIn by viewModel.isYouTubeLoggedIn.collectAsStateWithLifecycle()
+    val youtubeUserName by viewModel.youtubeUserName.collectAsStateWithLifecycle()
     val isSearchHistoryPaused by viewModel.isSearchHistoryPaused.collectAsStateWithLifecycle()
     val isPipEnabled by viewModel.isPipEnabled.collectAsStateWithLifecycle()
     val isBackgroundPlayEnabled by viewModel.isBackgroundPlayEnabled.collectAsStateWithLifecycle()
@@ -125,6 +129,10 @@ fun SettingsScreen(
         availableLocales = availableLocales,
         isAutoUpdateEnabled = isAutoUpdateEnabled,
         updateInfo = updateInfo,
+        isYouTubeLoggedIn = isYouTubeLoggedIn,
+        youtubeUserName = youtubeUserName,
+        onOpenSignIn = onOpenSignIn,
+        onSignOutYouTube = viewModel::signOutYouTube,
         onSetSearchHistoryPaused = viewModel::setSearchHistoryPaused,
         onSetPipEnabled = viewModel::setPipEnabled,
         onSetBackgroundPlayEnabled = viewModel::setBackgroundPlayEnabled,
@@ -160,6 +168,10 @@ private fun SettingsContent(
     availableLocales: List<java.util.Locale>,
     isAutoUpdateEnabled: Boolean,
     updateInfo: com.arslandaim.playtube.domain.repository.UpdateInfo,
+    isYouTubeLoggedIn: Boolean,
+    youtubeUserName: String?,
+    onOpenSignIn: () -> Unit,
+    onSignOutYouTube: () -> Unit,
     onSetSearchHistoryPaused: (Boolean) -> Unit,
     onSetPipEnabled: (Boolean) -> Unit,
     onSetBackgroundPlayEnabled: (Boolean) -> Unit,
@@ -181,6 +193,7 @@ private fun SettingsContent(
     var showClearInterestsDialog by remember { mutableStateOf(false) }
     var showDeveloperDialog by remember { mutableStateOf(false) }
     var showLanguageSheet by remember { mutableStateOf(false) }
+    var showSignOutConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val isPipSupported = remember {
@@ -245,6 +258,18 @@ private fun SettingsContent(
         )
     }
 
+    if (showSignOutConfirm) {
+        ConfirmationDialog(
+            title = "Sign out of YouTube?",
+            message = "This will disconnect your YouTube session and remove your local account credentials. You can sign in again anytime.",
+            onDismiss = { showSignOutConfirm = false },
+            onConfirm = {
+                onSignOutYouTube()
+                showSignOutConfirm = false
+            }
+        )
+    }
+
     if (showLanguageSheet) {
         LanguageSelectionSheet(
             availableLocales = availableLocales,
@@ -284,6 +309,27 @@ private fun SettingsContent(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Account Category
+            item {
+                SettingsGroup(title = "Account") {
+                    if (isYouTubeLoggedIn) {
+                        SettingsItem(
+                            title = youtubeUserName?.ifBlank { "YouTube User" } ?: "YouTube User",
+                            subtitle = "Connected to YouTube • Tap to sign out",
+                            icon = Icons.Default.AccountCircle,
+                            onClick = { showSignOutConfirm = true }
+                        )
+                    } else {
+                        SettingsItem(
+                            title = "Google / YouTube Account",
+                            subtitle = "Sign in to sync your subscriptions and playlists",
+                            icon = Icons.Default.AccountCircle,
+                            onClick = onOpenSignIn
+                        )
+                    }
+                }
+            }
+
             // Update Category
             item {
                 SettingsGroup(title = stringResource(R.string.settings_group_update)) {
