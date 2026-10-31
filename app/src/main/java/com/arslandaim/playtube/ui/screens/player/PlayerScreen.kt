@@ -8,6 +8,7 @@ package com.arslandaim.playtube.ui.screens.player
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,6 +31,8 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Settings
@@ -420,6 +423,19 @@ private fun PlayerContent(
 
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val view = LocalView.current
+    val activity = context as? Activity
+
+    val toggleFullscreen: () -> Unit = {
+        if (isLandscape) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        } else {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        }
+    }
+
+    BackHandler(enabled = isLandscape) {
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+    }
 
     var resizeMode by remember { mutableIntStateOf(AspectRatioFrameLayout.RESIZE_MODE_FIT) }
     var aspectRatioText by remember { mutableStateOf("Fit") }
@@ -922,10 +938,17 @@ private fun PlayerContent(
                                 onDoubleTapLeft = onSeekBackward,
                                 onDoubleTapRight = onSeekForward,
                                 onSingleTap = { controlsVisible = !controlsVisible },
-                                onSwipeDown = onBack,
+                                onSwipeDown = {
+                                    if (isLandscape) {
+                                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                    } else {
+                                        onBack()
+                                    }
+                                },
                                 onSwipeUp = {
-                                    val activity = context as? Activity
-                                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                                    if (!isLandscape) {
+                                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                    }
                                 },
                                 onDragStart = {
                                     isDragging = true
@@ -1055,6 +1078,7 @@ private fun PlayerContent(
                                     repeatMode = repeatMode,
                                     hasSubtitles = (uiState as? PlayerUiState.Success)?.bundle?.subtitles?.isNotEmpty() == true,
                                     isAspectRatioEnabled = isLandscape,
+                                    isLandscape = isLandscape,
                                     onPlayPause = onPlayPause,
                                     onSkipNext = onSkipNext,
                                     onSkipPrevious = onSkipPrevious,
@@ -1063,6 +1087,7 @@ private fun PlayerContent(
                                     onShowSubtitleSettings = { showSubtitleSheet = true },
                                     onShowSettings = { showSettingsSheet = true },
                                     onToggleAspectRatio = { cycleAspectRatio() },
+                                    onToggleFullscreen = toggleFullscreen,
                                     onBack = onBack
                                 )
                             }
@@ -1413,6 +1438,7 @@ private fun PlayerControlsOverlay(
     repeatMode: RepeatMode,
     hasSubtitles: Boolean,
     isAspectRatioEnabled: Boolean = true,
+    isLandscape: Boolean = false,
     onPlayPause: () -> Unit,
     onSkipNext: () -> Unit,
     onSkipPrevious: () -> Unit,
@@ -1421,6 +1447,7 @@ private fun PlayerControlsOverlay(
     onShowSubtitleSettings: () -> Unit,
     onShowSettings: () -> Unit,
     onToggleAspectRatio: () -> Unit,
+    onToggleFullscreen: () -> Unit,
     onBack: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
@@ -1495,11 +1522,11 @@ private fun PlayerControlsOverlay(
                 .displayCutoutPadding()
                 .padding(bottom = 12.dp) // Sit closer to the bottom border
         ) {
-            // Time Display & Live Badge
+            // Time Display, Live Badge & Fullscreen Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(start = 24.dp, end = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1527,21 +1554,47 @@ private fun PlayerControlsOverlay(
                         )
                     }
                 } else {
-                    Text(
-                        text = VideoUtils.formatDuration(currentPosition() / 1000),
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            shadow = androidx.compose.ui.graphics.Shadow(Color.Black, blurRadius = 4f)
-                        ),
-                        color = Color.White
-                    )
-                    Text(
-                        text = VideoUtils.formatDuration(duration() / 1000),
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            shadow = androidx.compose.ui.graphics.Shadow(Color.Black, blurRadius = 4f)
-                        ),
-                        color = Color.White.copy(alpha = 0.8f)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = VideoUtils.formatDuration(currentPosition() / 1000),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                shadow = androidx.compose.ui.graphics.Shadow(Color.Black, blurRadius = 4f)
+                            ),
+                            color = Color.White
+                        )
+                        Text(
+                            text = " / ",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Normal,
+                                shadow = androidx.compose.ui.graphics.Shadow(Color.Black, blurRadius = 4f)
+                            ),
+                            color = Color.White.copy(alpha = 0.6f)
+                        )
+                        Text(
+                            text = VideoUtils.formatDuration(duration() / 1000),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                shadow = androidx.compose.ui.graphics.Shadow(Color.Black, blurRadius = 4f)
+                            ),
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+
+                // YouTube-style Fullscreen Button
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onToggleFullscreen()
+                    },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isLandscape) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                        contentDescription = if (isLandscape) "Exit Fullscreen" else "Enter Fullscreen",
+                        tint = Color.White,
+                        modifier = Modifier.size(26.dp)
                     )
                 }
             }
@@ -1558,7 +1611,14 @@ private fun PlayerControlsOverlay(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
-                onClick = onBack,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (isLandscape) {
+                        onToggleFullscreen()
+                    } else {
+                        onBack()
+                    }
+                },
                 modifier = Modifier
                     .background(Color.Black.copy(alpha = 0.35f), CircleShape)
                     .size(40.dp)
