@@ -74,8 +74,10 @@ A fast, private, ad-free, and feature-rich YouTube client for Android, engineere
 - One-tap Incognito Mode to keep watch habits completely private.
 - Clear search history, watch history, or learned recommendation data whenever you wish.
 
-### 🎂 Special Developer Celebrations
-- Built-in birthday celebration greeting on December 10th with confetti effects and interactive easter eggs (`#birthday` / `#srivatsan`).
+### 📺 YouTube-Style Fullscreen Mode
+- **One-Tap Fullscreen:** Dedicated YouTube-style fullscreen toggle button (`⛶`) to seamlessly transition between portrait and edge-to-edge landscape playback.
+- **Fluid Gestures:** Swipe up on the video to enter full screen; swipe down or press back to return to portrait without closing the video.
+- **Dynamic Aspect Ratio:** Switch on-the-fly between Fit (16:9), Zoom to Fill (crops black bars on modern ultrawide screens), and Stretch.
 
 ---
 
