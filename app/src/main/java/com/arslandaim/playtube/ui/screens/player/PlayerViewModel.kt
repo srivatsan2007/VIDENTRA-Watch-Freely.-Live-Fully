@@ -125,6 +125,9 @@ class PlayerViewModel @Inject constructor(
     val isPlayerGesturesEnabled: StateFlow<Boolean> = preferencesManager.isPlayerGesturesEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val isAmbientModeEnabled: StateFlow<Boolean> = preferencesManager.isAmbientModeEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     val chapters: StateFlow<List<VideoChapter>> = uiState.map { state ->
         if (state is PlayerUiState.Success) {
             VideoChapterParser.parseChapters(state.bundle.description)
@@ -837,6 +840,7 @@ class PlayerViewModel @Inject constructor(
     fun setSubtitlesEnabled(enabled: Boolean) { _isCcEnabled.value = enabled; playbackManager.updateCcState(enabled, _selectedSubtitleLanguage.value); viewModelScope.launch { preferencesManager.setSubtitlesEnabled(enabled) } }
     fun setSubtitleLanguage(lang: String?) { viewModelScope.launch { if (lang == null) setSubtitlesEnabled(false) else { _isCcEnabled.value = true; _selectedSubtitleLanguage.value = lang; playbackManager.updateCcState(true, lang); preferencesManager.setSubtitlesEnabled(true); preferencesManager.setPreferredSubtitleLanguage(lang) } } }
     fun setAutoplayEnabled(enabled: Boolean) { _isAutoplayEnabled.value = enabled; viewModelScope.launch { preferencesManager.setAutoplayEnabled(enabled) } }
+    fun setAmbientModeEnabled(enabled: Boolean) { viewModelScope.launch { preferencesManager.setAmbientModeEnabled(enabled) } }
     
     fun setRepeatMode(mode: RepeatMode) {
         _repeatMode.value = mode

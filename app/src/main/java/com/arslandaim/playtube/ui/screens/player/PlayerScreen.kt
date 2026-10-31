@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -78,6 +79,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arslandaim.playtube.R
 import com.arslandaim.playtube.ui.components.InfiniteScrollEffect
 import com.arslandaim.playtube.ui.components.player.PersistentProgressBar
+import com.arslandaim.playtube.ui.components.player.AmbientGlowBackground
 import com.arslandaim.playtube.ui.components.DownloadSelectionSheet
 import com.arslandaim.playtube.ui.components.PlaybackSpeedSelectionSheet
 import com.arslandaim.playtube.ui.components.PitchSelectionSheet
@@ -166,6 +168,7 @@ fun PlayerScreen(
     val playbackPitch by viewModel.playbackPitch.collectAsStateWithLifecycle()
     val showStatsForNerds by viewModel.showStatsForNerds.collectAsStateWithLifecycle()
     val playbackStats by viewModel.playbackStats.collectAsStateWithLifecycle()
+    val isAmbientModeEnabled by viewModel.isAmbientModeEnabled.collectAsStateWithLifecycle()
     val comments by viewModel.comments.collectAsStateWithLifecycle()
     val isFetchingComments by viewModel.isFetchingComments.collectAsStateWithLifecycle()
     val replies by viewModel.replies.collectAsStateWithLifecycle()
@@ -284,6 +287,8 @@ fun PlayerScreen(
             showStatsForNerds = showStatsForNerds,
             playbackStats = playbackStats,
             onToggleStats = viewModel::toggleStatsForNerds,
+            isAmbientModeEnabled = isAmbientModeEnabled,
+            onToggleAmbientMode = viewModel::setAmbientModeEnabled,
             subtitleFontSize = subtitleFontSize,
             subtitleBackgroundOpacity = subtitleBackgroundOpacity,
             isPlayerGesturesEnabled = isPlayerGesturesEnabled,
@@ -377,6 +382,8 @@ private fun PlayerContent(
     showStatsForNerds: Boolean,
     playbackStats: com.arslandaim.playtube.ui.screens.player.PlaybackStats,
     onToggleStats: () -> Unit,
+    isAmbientModeEnabled: Boolean = true,
+    onToggleAmbientMode: (Boolean) -> Unit = {},
     subtitleFontSize: Float,
     subtitleBackgroundOpacity: Float,
     isPlayerGesturesEnabled: Boolean = true,
@@ -668,6 +675,18 @@ private fun PlayerContent(
                     }
                 )
                 ListItem(
+                    headlineContent = { Text(stringResource(R.string.settings_ambient_mode)) },
+                    supportingContent = { Text(stringResource(R.string.settings_ambient_mode_desc)) },
+                    leadingContent = { Icon(Icons.Default.Palette, null) },
+                    trailingContent = {
+                        Switch(
+                            checked = isAmbientModeEnabled,
+                            onCheckedChange = { onToggleAmbientMode(it) }
+                        )
+                    },
+                    modifier = Modifier.clickable { onToggleAmbientMode(!isAmbientModeEnabled) }
+                )
+                ListItem(
                     headlineContent = { Text("Stats for Nerds") },
                     trailingContent = {
                         Switch(
@@ -773,6 +792,14 @@ private fun PlayerContent(
         }
     }
 
+    val effectiveThumbnailUrl = remember(uiState, initialThumbnail, videoId) {
+        when (uiState) {
+            is PlayerUiState.Upcoming -> uiState.thumbnailUrl
+            is PlayerUiState.Success -> uiState.bundle.thumbnailUrl
+            else -> null
+        } ?: initialThumbnail ?: VideoUtils.getBestThumbnailUrl(videoId)
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         contentWindowInsets = WindowInsets(0, 0, 0, 0) // Force edge-to-edge
@@ -782,6 +809,13 @@ private fun PlayerContent(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
+            if (!isLandscape) {
+                AmbientGlowBackground(
+                    thumbnailUrl = effectiveThumbnailUrl,
+                    isAmbientModeEnabled = isAmbientModeEnabled,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
             Column(
                 modifier = Modifier

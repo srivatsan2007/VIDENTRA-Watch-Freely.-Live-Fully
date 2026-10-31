@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Recommend
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
@@ -101,6 +102,7 @@ fun SettingsScreen(
     val isBackgroundPlayEnabled by viewModel.isBackgroundPlayEnabled.collectAsStateWithLifecycle()
     val isRecommendationsPaused by viewModel.isRecommendationsPaused.collectAsStateWithLifecycle()
     val isDynamicColorEnabled by viewModel.isDynamicColorEnabled.collectAsStateWithLifecycle()
+    val isAmbientModeEnabled by viewModel.isAmbientModeEnabled.collectAsStateWithLifecycle()
     val isPlayerGesturesEnabled by viewModel.isPlayerGesturesEnabled.collectAsStateWithLifecycle()
     val subtitleFontSize by viewModel.subtitleFontSize.collectAsStateWithLifecycle()
     val subtitleBackgroundOpacity by viewModel.subtitleBackgroundOpacity.collectAsStateWithLifecycle()
@@ -115,6 +117,7 @@ fun SettingsScreen(
         isBackgroundPlayEnabled = isBackgroundPlayEnabled,
         isRecommendationsPaused = isRecommendationsPaused,
         isDynamicColorEnabled = isDynamicColorEnabled,
+        isAmbientModeEnabled = isAmbientModeEnabled,
         isPlayerGesturesEnabled = isPlayerGesturesEnabled,
         subtitleFontSize = subtitleFontSize,
         subtitleBackgroundOpacity = subtitleBackgroundOpacity,
@@ -127,6 +130,7 @@ fun SettingsScreen(
         onSetBackgroundPlayEnabled = viewModel::setBackgroundPlayEnabled,
         onSetRecommendationsPaused = viewModel::setRecommendationsPaused,
         onSetDynamicColorEnabled = viewModel::setDynamicColorEnabled,
+        onSetAmbientModeEnabled = viewModel::setAmbientModeEnabled,
         onSetPlayerGesturesEnabled = viewModel::setPlayerGesturesEnabled,
         onSetSubtitleFontSize = viewModel::setSubtitleFontSize,
         onSetSubtitleBackgroundOpacity = viewModel::setSubtitleBackgroundOpacity,
@@ -148,6 +152,7 @@ private fun SettingsContent(
     isBackgroundPlayEnabled: Boolean,
     isRecommendationsPaused: Boolean,
     isDynamicColorEnabled: Boolean,
+    isAmbientModeEnabled: Boolean,
     isPlayerGesturesEnabled: Boolean,
     subtitleFontSize: Float,
     subtitleBackgroundOpacity: Float,
@@ -160,6 +165,7 @@ private fun SettingsContent(
     onSetBackgroundPlayEnabled: (Boolean) -> Unit,
     onSetRecommendationsPaused: (Boolean) -> Unit,
     onSetDynamicColorEnabled: (Boolean) -> Unit,
+    onSetAmbientModeEnabled: (Boolean) -> Unit,
     onSetPlayerGesturesEnabled: (Boolean) -> Unit,
     onSetSubtitleFontSize: (Float) -> Unit,
     onSetSubtitleBackgroundOpacity: (Float) -> Unit,
@@ -386,6 +392,14 @@ private fun SettingsContent(
             // Content Category
             item {
                 SettingsGroup(title = stringResource(R.string.settings_group_appearance_playback)) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.settings_ambient_mode),
+                        subtitle = stringResource(R.string.settings_ambient_mode_desc),
+                        icon = Icons.Default.Palette,
+                        checked = isAmbientModeEnabled,
+                        onCheckedChange = onSetAmbientModeEnabled
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                     SettingsSwitchItem(
                         title = stringResource(R.string.settings_player_gestures),
                         subtitle = stringResource(R.string.settings_player_gestures_desc),

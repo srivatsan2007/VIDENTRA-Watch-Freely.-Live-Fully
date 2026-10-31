@@ -165,6 +165,8 @@
     <string name="settings_clear_learned_data">Borrar datos aprendidos</string>
     <string name="settings_clear_learned_data_desc_item">Restablecer el perfil del motor de recomendaciones</string>
     <string name="settings_group_appearance_playback">Apariencia y reproducción</string>
+    <string name="settings_ambient_mode">Modo ambiente</string>
+    <string name="settings_ambient_mode_desc">Brillo de fondo dinámico que coincide con el video</string>
     <string name="settings_player_gestures">Gestos del reproductor</string>
     <string name="settings_player_gestures_desc">Activar gestos de deslizar para volumen y brillo</string>
     <string name="settings_material_you">Material You</string>

@@ -180,6 +180,8 @@
     <string name="settings_clear_learned_data">Öğrenilen verileri temizle</string>
     <string name="settings_clear_learned_data_desc_item">Öneri motoru profilini sıfırla</string>
     <string name="settings_group_appearance_playback">Görünüm ve Oynatma</string>
+    <string name="settings_ambient_mode">Ortam Modu</string>
+    <string name="settings_ambient_mode_desc">Video paletine göre dinamik arka plan ışıltısı</string>
     <string name="settings_player_gestures">Oynatıcı Hareketleri</string>
     <string name="settings_player_gestures_desc">Ses ve parlaklık için kaydırma hareketlerini etkinleştir</string>
     <string name="settings_material_you">Material You</string>

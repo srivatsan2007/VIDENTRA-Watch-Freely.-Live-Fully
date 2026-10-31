@@ -52,6 +52,9 @@ class SettingsViewModel @Inject constructor(
     val isDynamicColorEnabled: StateFlow<Boolean> = preferencesManager.isDynamicColorEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val isAmbientModeEnabled: StateFlow<Boolean> = preferencesManager.isAmbientModeEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     val isPlayerGesturesEnabled: StateFlow<Boolean> = preferencesManager.isPlayerGesturesEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
@@ -102,6 +105,12 @@ class SettingsViewModel @Inject constructor(
     fun setDynamicColorEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferencesManager.setDynamicColorEnabled(enabled)
+        }
+    }
+
+    fun setAmbientModeEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesManager.setAmbientModeEnabled(enabled)
         }
     }
 

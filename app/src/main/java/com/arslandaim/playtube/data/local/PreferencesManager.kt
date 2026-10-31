@@ -120,6 +120,14 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
             preferences[DYNAMIC_COLOR_ENABLED] ?: false
         }
 
+    open val isAmbientModeEnabled: Flow<Boolean> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[AMBIENT_MODE_ENABLED] ?: true
+        }
+
     open val isRecommendationsPaused: Flow<Boolean> = dataStore.data
         .catch { exception ->
             if (exception is IOException) {
@@ -292,6 +300,12 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
         }
     }
 
+    suspend fun setAmbientModeEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[AMBIENT_MODE_ENABLED] = enabled
+        }
+    }
+
     suspend fun setRecommendationsPaused(paused: Boolean) {
         dataStore.edit { preferences ->
             preferences[RECOMMENDATIONS_PAUSED] = paused
@@ -404,6 +418,7 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
         val SEARCH_GRID_VIEW = booleanPreferencesKey("search_grid_view")
         val AUTO_UPDATE_ENABLED = booleanPreferencesKey("auto_update_enabled")
         val DYNAMIC_COLOR_ENABLED = booleanPreferencesKey("dynamic_color_enabled")
+        val AMBIENT_MODE_ENABLED = booleanPreferencesKey("ambient_mode_enabled")
         val RECOMMENDATIONS_PAUSED = booleanPreferencesKey("recommendations_paused")
         val AUTOPLAY_ENABLED = booleanPreferencesKey("autoplay_enabled")
         val INCOGNITO_MODE = booleanPreferencesKey("incognito_mode")
