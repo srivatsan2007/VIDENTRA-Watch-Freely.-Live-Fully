@@ -88,13 +88,13 @@ class VidentraApp : Application(), Configuration.Provider, SingletonImageLoader.
     private fun checkVersionAndCleanup() {
         applicationScope.launch(Dispatchers.IO) {
             try {
-                val lastVersion = preferencesManager.lastAppVersion.first()
+                val lastCleanup = preferencesManager.lastCleanupVersion.first()
                 val currentVersion = BuildConfig.VERSION_CODE
                 
-                if (lastVersion != currentVersion) {
-                    PTLog.i("VidentraApp", "Detected update from $lastVersion to $currentVersion. Performing cache cleanup.")
+                if (lastCleanup != currentVersion) {
+                    PTLog.i("VidentraApp", "Detected update from $lastCleanup to $currentVersion. Performing cache cleanup.")
                     performUpdateCleanup()
-                    preferencesManager.setLastAppVersion(currentVersion)
+                    preferencesManager.setLastCleanupVersion(currentVersion)
                 }
             } catch (e: Exception) {
                 PTLog.e("VidentraApp", "Version check or cleanup failed", e)

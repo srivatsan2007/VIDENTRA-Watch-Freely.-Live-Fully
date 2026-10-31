@@ -71,7 +71,7 @@
     <string name="delete_download_desc">¿Estás seguro de que deseas eliminar este video descargado?</string>
 
     <!-- Search -->
-    <string name="search_placeholder">Buscar en PlayTube</string>
+    <string name="search_placeholder">Buscar en Videntra</string>
     <string name="discover_new">Descubre algo nuevo</string>
     <string name="recent_searches">Búsquedas recientes</string>
     <string name="clear_all">Borrar todo</string>
@@ -110,7 +110,7 @@
     <string name="duration">Duración</string>
     <string name="apply">Aplicar</string>
     <string name="close_app_on_finish">Cerrar la aplicación al finalizar</string>
-    <string name="close_app_desc">Ahorrar batería cerrando PlayTube</string>
+    <string name="close_app_desc">Ahorrar batería cerrando Videntra</string>
     <string name="timer_minutes_placeholder">%d minutos</string>
     <string name="subtitles">Subtítulos</string>
     <string name="off">Desactivado</string>

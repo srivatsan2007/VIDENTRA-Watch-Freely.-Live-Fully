@@ -8,13 +8,12 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
-import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.background
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
@@ -22,8 +21,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,14 +40,85 @@ fun YouTubeAuthSheet(
     onDismiss: () -> Unit,
     onAuthSuccess: (cookies: String, userName: String?, email: String?, avatarUrl: String?) -> Unit
 ) {
+    val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
     var webProgress by remember { mutableFloatStateOf(0f) }
     var currentWebUrl by remember { mutableStateOf("") }
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
     var isAuthHandled by remember { mutableStateOf(false) }
 
+    fun getMergedCookies(url: String?): String {
+        val cookieManager = CookieManager.getInstance()
+        val urlsToProbe = listOfNotNull(
+            "https://www.youtube.com",
+            "https://m.youtube.com",
+            "https://accounts.google.com",
+            "https://google.com",
+            url?.takeIf { it.isNotBlank() }
+        )
+        val cookieMap = mutableMapOf<String, String>()
+        urlsToProbe.forEach { probeUrl ->
+            val raw = cookieManager.getCookie(probeUrl) ?: ""
+            raw.split(";").forEach { pair ->
+                val trimmed = pair.trim()
+                if (trimmed.isNotEmpty()) {
+                    val parts = trimmed.split("=", limit = 2)
+                    if (parts.size == 2) {
+                        cookieMap[parts[0].trim()] = parts[1].trim()
+                    }
+                }
+            }
+        }
+        return cookieMap.entries.joinToString("; ") { "${it.key}=${it.value}" }
+    }
+
+    fun isSessionAuthenticated(cookies: String): Boolean {
+        return cookies.contains("LOGIN_INFO") ||
+                (cookies.contains("SAPISID") && (cookies.contains("SSID") || cookies.contains("SID"))) ||
+                cookies.contains("__Secure-1PSID") ||
+                (cookies.contains("SID=") && cookies.contains("HSID="))
+    }
+
+    fun completeAuthIfPossible(cookies: String, fallbackToDismiss: Boolean = false) {
+        if (isAuthHandled) return
+        if (isSessionAuthenticated(cookies)) {
+            isAuthHandled = true
+            webViewInstance?.evaluateJavascript(
+                "(function() { " +
+                "  try { " +
+                "    var ytBtn = document.querySelector('#avatar-btn')?.getAttribute('aria-label') || ''; " +
+                "    if (ytBtn) return ytBtn; " +
+                "    var gBtn = document.querySelector('a[aria-label*=\"Google Account\"], button[aria-label*=\"Google Account\"]')?.getAttribute('aria-label') || ''; " +
+                "    if (gBtn) return gBtn; " +
+                "    var emailEl = document.querySelector('[data-email]')?.getAttribute('data-email') || ''; " +
+                "    if (emailEl) return emailEl; " +
+                "    return ''; " +
+                "  } catch(e) { return ''; } " +
+                "})()"
+            ) { rawName ->
+                var cleanName = rawName?.trim('"', ' ', '\n', '\r')?.ifBlank { null }
+                if (cleanName?.startsWith("Google Account:") == true) {
+                    cleanName = cleanName.substringAfter("Google Account:").trim()
+                }
+                val finalName = cleanName?.takeIf { it.isNotBlank() } ?: "Google User"
+                onAuthSuccess(cookies, finalName, null, null)
+            }
+        } else if (fallbackToDismiss) {
+            onDismiss()
+        }
+    }
+
+    val safeDismiss = {
+        val merged = getMergedCookies(currentWebUrl)
+        if (isSessionAuthenticated(merged) && !isAuthHandled) {
+            completeAuthIfPossible(merged, fallbackToDismiss = true)
+        } else {
+            onDismiss()
+        }
+    }
+
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = safeDismiss,
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false
@@ -76,20 +144,38 @@ fun YouTubeAuthSheet(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Sign in to YouTube / Google",
+                                text = "Sign In",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = onDismiss) {
+                        IconButton(onClick = safeDismiss) {
                             Icon(Icons.Default.Close, contentDescription = "Close")
                         }
                     },
                     actions = {
                         IconButton(onClick = { webViewInstance?.reload() }) {
                             Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                        }
+                        TextButton(
+                            onClick = {
+                                val merged = getMergedCookies(currentWebUrl)
+                                if (isSessionAuthenticated(merged)) {
+                                    completeAuthIfPossible(merged)
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Please complete sign-in on Google first.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Done", fontWeight = FontWeight.Bold)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -118,11 +204,16 @@ fun YouTubeAuthSheet(
                             settings.apply {
                                 javaScriptEnabled = true
                                 domStorageEnabled = true
-                                databaseEnabled = true
                                 setSupportZoom(true)
                                 builtInZoomControls = true
                                 displayZoomControls = false
-                                userAgentString = "Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36"
+                                val defaultUa = userAgentString ?: ""
+                                val cleanUa = defaultUa.replace("; wv", "")
+                                userAgentString = if (cleanUa.contains("Chrome/")) {
+                                    cleanUa
+                                } else {
+                                    "Mozilla/5.0 (Linux; Android ${android.os.Build.VERSION.RELEASE}; ${android.os.Build.MODEL}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
+                                }
                             }
 
                             webChromeClient = object : WebChromeClient() {
@@ -145,35 +236,10 @@ fun YouTubeAuthSheet(
                                     isLoading = false
                                     currentWebUrl = url ?: ""
 
-                                    val cookieManager = CookieManager.getInstance()
-                                    val cookies = cookieManager.getCookie(url) ?: ""
-                                    val youtubeCookies = cookieManager.getCookie("https://www.youtube.com") ?: ""
-
-                                    val allCookies = if (cookies.contains("LOGIN_INFO") || cookies.contains("SAPISID")) {
-                                        cookies
-                                    } else {
-                                        youtubeCookies
-                                    }
-
-                                    // Detect YouTube session completion
-                                    val isLoginSuccessful = (allCookies.contains("LOGIN_INFO") || 
-                                            (allCookies.contains("SAPISID") && allCookies.contains("SSID"))) &&
-                                            (url?.contains("youtube.com") == true || url?.contains("myaccount.google.com") == true)
-
-                                    if (isLoginSuccessful && !isAuthHandled) {
-                                        isAuthHandled = true
-                                        // Attempt to read channel name or Google profile name
-                                        view?.evaluateJavascript(
-                                            "(function() { " +
-                                            "  try { " +
-                                            "    var name = document.querySelector('#avatar-btn')?.getAttribute('aria-label') || ''; " +
-                                            "    return name; " +
-                                            "  } catch(e) { return ''; } " +
-                                            "})()"
-                                        ) { rawName ->
-                                            val parsedName = rawName?.trim('"', ' ')?.ifBlank { "YouTube User" } ?: "YouTube User"
-                                            onAuthSuccess(allCookies, parsedName, null, null)
-                                        }
+                                    val merged = getMergedCookies(url)
+                                    val isPastLogin = (url == null || (!url.contains("ServiceLogin") && !url.contains("signin/v2")))
+                                    if (isSessionAuthenticated(merged) && isPastLogin && !isAuthHandled) {
+                                        completeAuthIfPossible(merged)
                                     }
                                 }
                             }

@@ -120,12 +120,12 @@ fun DataManagementScreen(
 
             // Native Backup Section
             item {
-                SettingsGroup(title = "PlayTube Native Backup") {
+                SettingsGroup(title = "Videntra Native Backup") {
                     SettingsItem(
                         title = "Create Backup",
-                        subtitle = "Save all your PlayTube data to a file",
+                        subtitle = "Save all your Videntra data to a file",
                         icon = Icons.Default.Backup,
-                        onClick = { backupCreator.launch("PlayTubeBackup_${System.currentTimeMillis()}.zip") }
+                        onClick = { backupCreator.launch("VidentraBackup_${System.currentTimeMillis()}.zip") }
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
                     SettingsItem(

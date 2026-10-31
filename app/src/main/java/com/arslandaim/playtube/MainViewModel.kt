@@ -110,10 +110,11 @@ class MainViewModel @Inject constructor(
                 _showOfflineDialog.value = true
             }
 
-            // Check if first-time user or updated version
-            val lastVersion = preferencesManager.lastAppVersion.first()
+            // Check if first-time user or updated version to show welcome dialog
+            val hasSeenWelcome = preferencesManager.hasSeenWelcomeDialog.first()
+            val lastSeenWelcomeVersion = preferencesManager.lastSeenWelcomeVersion.first()
             val currentVersionCode = BuildConfig.VERSION_CODE
-            if (lastVersion < currentVersionCode) {
+            if (!hasSeenWelcome || lastSeenWelcomeVersion < currentVersionCode) {
                 _showWelcomeDialog.value = true
             }
 
@@ -136,6 +137,8 @@ class MainViewModel @Inject constructor(
 
     fun dismissWelcomeDialog() {
         viewModelScope.launch {
+            preferencesManager.setHasSeenWelcomeDialog(true)
+            preferencesManager.setLastSeenWelcomeVersion(BuildConfig.VERSION_CODE)
             preferencesManager.setLastAppVersion(BuildConfig.VERSION_CODE)
             _showWelcomeDialog.value = false
         }

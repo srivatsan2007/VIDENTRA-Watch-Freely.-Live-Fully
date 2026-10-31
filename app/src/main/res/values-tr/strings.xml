@@ -86,7 +86,7 @@
     <string name="delete_download_desc">Bu indirilmiş videoyu silmek istediğinizden emin misiniz?</string>
 
     <!-- Search -->
-    <string name="search_placeholder">PlayTube\'da Ara</string>
+    <string name="search_placeholder">Videntra\'da Ara</string>
     <string name="discover_new">Yeni bir şeyler keşfet</string>
     <string name="recent_searches">Son aramalar</string>
     <string name="clear_all">Tümünü temizle</string>
@@ -125,7 +125,7 @@
     <string name="duration">Süre</string>
     <string name="apply">Uygula</string>
     <string name="close_app_on_finish">Bittiğinde uygulamayı kapat</string>
-    <string name="close_app_desc">PlayTube\'u kapatarak pil tasarrufu yapın</string>
+    <string name="close_app_desc">Videntra\'u kapatarak pil tasarrufu yapın</string>
     <string name="timer_minutes_placeholder">%d dakika</string>
     <string name="subtitles">Altyazılar</string>
     <string name="off">Kapalı</string>

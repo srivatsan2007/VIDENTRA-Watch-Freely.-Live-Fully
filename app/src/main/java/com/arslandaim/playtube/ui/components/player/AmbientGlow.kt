@@ -65,6 +65,11 @@ data class AmbientPalette(
 object AmbientColorExtractor {
     private val paletteCache = LruCache<String, AmbientPalette>(35)
 
+    fun extractPaletteImmediate(thumbnailUrl: String?): AmbientPalette? {
+        if (thumbnailUrl.isNullOrBlank()) return AmbientPalette.Default
+        return paletteCache.get(thumbnailUrl)
+    }
+
     private val fallbackHttpClient by lazy {
         OkHttpClient.Builder()
             .connectTimeout(4, TimeUnit.SECONDS)
@@ -239,11 +244,7 @@ fun rememberAmbientPalette(thumbnailUrl: String?): AmbientPalette {
     return palette
 }
 
-// Quick in-memory cache check helper
-fun AmbientColorExtractor.extractPaletteImmediate(thumbnailUrl: String?): AmbientPalette? {
-    if (thumbnailUrl.isNullOrBlank()) return AmbientPalette.Default
-    return paletteCache.get(thumbnailUrl)
-}
+
 
 /**
  * YouTube-style Ambient Glow Background.

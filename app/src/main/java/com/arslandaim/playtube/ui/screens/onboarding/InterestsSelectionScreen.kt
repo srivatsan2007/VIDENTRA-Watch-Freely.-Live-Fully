@@ -65,7 +65,7 @@ fun InterestsSelectionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Welcome to PlayTube",
+                        text = "Welcome to Videntra",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold
                     )

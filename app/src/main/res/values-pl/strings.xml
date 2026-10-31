@@ -69,7 +69,7 @@
     <string name="delete_download_desc">Czy jesteś pewny/a że chcesz usunąć ten pobrany film?</string>
 
     <!-- Search -->
-    <string name="search_placeholder">Przeszukaj PlayTube</string>
+    <string name="search_placeholder">Przeszukaj Videntra</string>
     <string name="discover_new">Odkryj coś nowego</string>
     <string name="recent_searches">Ostatnie wyszukiwania</string>
     <string name="clear_all">Wyczyść wszystko</string>
@@ -108,7 +108,7 @@
     <string name="duration">Czas trwania</string>
     <string name="apply">Zgłoś się</string>
     <string name="close_app_on_finish">Zamknij aplikację na końcu</string>
-    <string name="close_app_desc">Oszczędzaj baterię zamykając PlayTube</string>
+    <string name="close_app_desc">Oszczędzaj baterię zamykając Videntra</string>
     <string name="timer_minutes_placeholder">%d minut</string>
     <string name="subtitles">Napisy</string>
     <string name="off">Wyłączone</string>

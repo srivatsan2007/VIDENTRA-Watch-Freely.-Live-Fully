@@ -274,6 +274,30 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
             preferences[LAST_APP_VERSION] ?: 0
         }
 
+    open val hasSeenWelcomeDialog: Flow<Boolean> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[HAS_SEEN_WELCOME_DIALOG] ?: false
+        }
+
+    open val lastSeenWelcomeVersion: Flow<Int> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[LAST_SEEN_WELCOME_VERSION] ?: 0
+        }
+
+    open val lastCleanupVersion: Flow<Int> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[LAST_CLEANUP_VERSION] ?: 0
+        }
+
     open val lastBirthdayCelebrationYear: Flow<Int> = dataStore.data
         .catch { exception ->
             if (exception is IOException) emit(emptyPreferences())
@@ -447,6 +471,24 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
         }
     }
 
+    suspend fun setHasSeenWelcomeDialog(seen: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[HAS_SEEN_WELCOME_DIALOG] = seen
+        }
+    }
+
+    suspend fun setLastSeenWelcomeVersion(version: Int) {
+        dataStore.edit { preferences ->
+            preferences[LAST_SEEN_WELCOME_VERSION] = version
+        }
+    }
+
+    suspend fun setLastCleanupVersion(version: Int) {
+        dataStore.edit { preferences ->
+            preferences[LAST_CLEANUP_VERSION] = version
+        }
+    }
+
     suspend fun setLastBirthdayCelebrationYear(year: Int) {
         dataStore.edit { preferences ->
             preferences[LAST_BIRTHDAY_CELEBRATION_YEAR] = year
@@ -514,6 +556,9 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
         val SUBTITLE_BACKGROUND_OPACITY = floatPreferencesKey("subtitle_background_opacity")
         val APP_LANGUAGE = stringPreferencesKey("app_language")
         val LAST_APP_VERSION = intPreferencesKey("last_app_version")
+        val HAS_SEEN_WELCOME_DIALOG = booleanPreferencesKey("has_seen_welcome_dialog")
+        val LAST_SEEN_WELCOME_VERSION = intPreferencesKey("last_seen_welcome_version")
+        val LAST_CLEANUP_VERSION = intPreferencesKey("last_cleanup_version")
         val LAST_BIRTHDAY_CELEBRATION_YEAR = intPreferencesKey("last_birthday_celebration_year")
         
         val LAST_PLAYED_VIDEO_ID = stringPreferencesKey("last_played_video_id")

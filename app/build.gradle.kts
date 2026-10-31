@@ -73,7 +73,6 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
-    debugImplementation(libs.leakcanary)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.work)
@@ -112,8 +111,6 @@ dependencies {
     // JSON
     implementation(libs.gson)
     implementation(libs.kotlinx.serialization.json)
-
-    debugImplementation(libs.leakcanary.android)
 
     // Ktor
     implementation(libs.ktor.client.core)
