@@ -1,87 +1,85 @@
 <div align="center">
 
-<img src="fastlane/metadata/android/en-US/images/icon.png" alt="PlayTube Icon" width="120">
+<img src="art/videntra_logo.png" alt="VIDENTRA Logo" width="180">
 
-# PlayTube
+# VIDENTRA
 
-### A fast, private, and feature-rich YouTube client for Android
+### *Watch Freely. Live Fully.*
 
-**No ads · No tracking · No data collection**
+A fast, private, ad-free, and feature-rich YouTube client for Android, engineered with modern Jetpack Compose and Material Design 3.
 
-<img src="fastlane/metadata/android/en-US/images/PlaytubefeatureGraphic.png" alt="PlayTube Feature Graphic" width="100%">
+**No ads · No tracking · No Google Services required · 100% Privacy-First**
 
 <br>
 
-<p>
-  <a href="https://github.com/arslandaim-hub/PlayTube/releases/latest">
-    <img src="https://img.shields.io/github/v/release/arslandaim-hub/PlayTube?style=flat-square&color=10b981" alt="Latest Release">
+<p align="center">
+  <a href="https://github.com/srivatsan2007/VIDENTRA---Watch-Freely.-Live-Fully/releases/latest">
+    <img src="https://img.shields.io/badge/Release-v1.0.0-10b981?style=for-the-badge&logo=android&logoColor=white" alt="Latest Release">
   </a>
-  <a href="https://github.com/arslandaim-hub/PlayTube/stargazers">
-    <img src="https://img.shields.io/github/stars/arslandaim-hub/PlayTube?style=flat-square&color=fbbf24" alt="GitHub Stars">
+  <a href="https://github.com/srivatsan2007/VIDENTRA---Watch-Freely.-Live-Fully/stargazers">
+    <img src="https://img.shields.io/github/stars/srivatsan2007/VIDENTRA---Watch-Freely.-Live-Fully?style=for-the-badge&color=fbbf24" alt="GitHub Stars">
   </a>
-  <a href="https://github.com/arslandaim-hub/PlayTube/network/members">
-    <img src="https://img.shields.io/github/forks/arslandaim-hub/PlayTube?style=flat-square&color=fbbf24" alt="GitHub Forks">
+  <a href="https://github.com/srivatsan2007/VIDENTRA---Watch-Freely.-Live-Fully/network/members">
+    <img src="https://img.shields.io/github/forks/srivatsan2007/VIDENTRA---Watch-Freely.-Live-Fully?style=for-the-badge&color=38bdf8" alt="GitHub Forks">
   </a>
-  <a href="https://github.com/arslandaim-hub/PlayTube/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/arslandaim-hub/PlayTube?style=flat-square&color=3b82f6" alt="License">
+  <a href="https://github.com/srivatsan2007/VIDENTRA---Watch-Freely.-Live-Fully/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/License-GPL--3.0-3b82f6?style=for-the-badge" alt="License">
   </a>
-  <img src="https://img.shields.io/badge/Android-API%2024%2B-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android API 24+">
-  <img src="https://img.shields.io/badge/Kotlin-100%25-B125EA?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin">
-</p>
-
-<p>
-  <img src="https://img.shields.io/github/downloads/arslandaim-hub/PlayTube/total?style=flat-square&color=3b82f6&logo=github" alt="Total Downloads">
+  <img src="https://img.shields.io/badge/Kotlin-100%25-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Android-API%2024%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android API 24+">
 </p>
 
 <br>
 
-<a href="https://github.com/arslandaim-hub/PlayTube/releases/latest">
-  <img src="https://img.shields.io/badge/GET%20IT%20ON-GitHub-000000?style=for-the-badge&logo=github&logoColor=white" height="50" alt="Get it on GitHub">
+<a href="https://github.com/srivatsan2007/VIDENTRA---Watch-Freely.-Live-Fully/releases/latest">
+  <img src="https://img.shields.io/badge/DOWNLOAD%20APK-GitHub%20Releases-238636?style=for-the-badge&logo=github&logoColor=white" height="48" alt="Download APK">
 </a>
-
-<br><br>
-
-<a href="https://f-droid.org/packages/com.arslandaim.playtube/">
-  <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" height="50" alt="Get it on F-Droid">
-</a>
-
-<br><br>
-
-<a href="https://github.com/ImranR98/Obtainium">
-  <img src="https://img.shields.io/badge/Get%20Updates%20via-Obtainium-4CAF50?style=for-the-badge" height="50" alt="Get Updates via Obtainium">
-</a>
-
-<br>
-
-<sub>Use <b>Obtainium</b> to receive updates directly from PlayTube's GitHub releases.</sub>
 
 </div>
 
 ---
 
-## Features
+## 🌟 About Videntra
 
-* **Fluid Glass UI:** A modern, dynamic, and smooth full-screen browsing experience.
-* **Background Playback:** Continue listening with full media controls.
-* **Picture-in-Picture:** Watch videos while using other apps.
-* **Comments and Replies:** Browse comments and view replies.
-* **Multi-language Subtitles:** Watch content with subtitle support.
-* **Incognito Mode:** Browse without affecting personalized recommendations.
-* **High-Quality Downloads:** Download supported content in high quality.
-* **Gesture Controls:** Control brightness, volume, and playback with gestures.
-* **Orientation Controls:** Easily switch between portrait and landscape modes.
-* **Subscription Management:** Subscribe to and manage channels without a Google account.
-* **Privacy First:** No ads, tracking, or data collection.
-
-### Personalized Recommendations
-
-PlayTube includes a lightweight recommendation system that learns from user activity to provide more relevant video suggestions.
-
-Recommendation learning can be paused, and learned data can be cleared at any time from the app settings.
+**VIDENTRA** is designed from the ground up for users who want total control over their media streaming experience without advertisements, telemetry, or Google Play Services dependencies. Built with state-of-the-art Android architecture, it combines sleek aesthetics, high performance, and deep customization.
 
 ---
 
-## Screenshots
+## ✨ Key Features
+
+### 🌈 YouTube-Style "Ambient Mode" (Dynamic Palette)
+- **Video-Driven Background Glow:** As you watch videos, dominant and vibrant colors are extracted dynamically and cast a soft, luminous ambient glow behind the player, title, and comments.
+- **Atmospheric Cross-Fade:** Smoothly cross-fades between color palettes over 850ms when transitioning between videos (e.g., deep aquatic cyan for ocean videos, warm orange/purple for sunsets).
+- **Quick Controls:** Toggle on or off anytime via the player settings sheet or app appearance settings.
+
+### 🛡️ Privacy & Zero Ads
+- Complete freedom from banner ads, interstitial video ads, and sponsored tracking.
+- No Google account or microG framework required to subscribe, bookmark, or create playlists.
+
+### 🎧 Background Playback & Picture-in-Picture (PiP)
+- Seamless audio playback when your screen is locked or while multitasking in other apps.
+- Resizable Picture-in-Picture floating window with intuitive touch controls.
+
+### ⚡ Fluid Modern Design
+- Built entirely with **Jetpack Compose** and **Material Design 3**.
+- Smooth spring physics, fluid gestures, swipe controls for volume/brightness, and immersive edge-to-edge support.
+
+### 📥 High-Speed Offline Downloads
+- Download video and audio streams up to full HD with multi-stream parallel acceleration and resume capabilities.
+
+### 💬 Rich Interactive Community
+- Read comments, expand replies, parse timestamps, and browse chapters with seamless navigation.
+
+### 🕵️ Incognito & Data Control
+- One-tap Incognito Mode to keep watch habits completely private.
+- Clear search history, watch history, or learned recommendation data whenever you wish.
+
+### 🎂 Special Developer Celebrations
+- Built-in birthday celebration greeting on December 10th with confetti effects and interactive easter eggs (`#birthday` / `#srivatsan`).
+
+---
+
+## 📸 Screenshots
 
 <div align="center">
 
@@ -101,96 +99,61 @@ Recommendation learning can be paused, and learned data can be cleared at any ti
 
 ---
 
-## Technology Stack
+## 🛠️ Technology Stack
 
-| Category                 | Technology         | Description                                    |
-| ------------------------ | ------------------ | ---------------------------------------------- |
-| **Architecture**         | MVVM               | Model-View-ViewModel architecture              |
-|                          | Clean Architecture | Separation between Domain, Data, and UI layers |
-|                          | Repository Pattern | Centralized data access and management         |
-| **Kotlin and Reactive**  | Kotlin Coroutines  | Asynchronous and background operations         |
-|                          | StateFlow          | Reactive UI state management                   |
-| **UI**                   | Jetpack Compose    | Modern declarative Android UI                  |
-|                          | Material Design 3  | Modern components and dynamic theming          |
-|                          | Compose Animations | Smooth transitions and UI animations           |
-| **Storage**              | Room Database      | Local storage for user metadata                |
-|                          | Jetpack DataStore  | User preferences and application settings      |
-| **Media and Networking** | AndroidX Media3    | Video and audio playback                       |
-|                          | Coil 3             | Image loading and caching                      |
-|                          | NewPipeExtractor   | Stream and metadata extraction                 |
-|                          | OkHttp             | HTTP networking                                |
-| **Background and DI**    | Hilt (Dagger)      | Dependency injection                           |
-|                          | WorkManager        | Reliable background tasks and downloads        |
-| **Build Tools**          | KSP                | Kotlin Symbol Processing                       |
-|                          | Version Catalogs   | Centralized dependency and version management  |
+| Category | Technology | Purpose |
+|---|---|---|
+| **Language** | Kotlin (100%) | Modern, safe, expressive programming |
+| **UI Framework** | Jetpack Compose | Modern declarative Android UI toolkit |
+| **Design System** | Material Design 3 | Dynamic color schemes, fluid elevation, and typography |
+| **Architecture** | MVVM + Clean Architecture | Strict separation of concerns (Data, Domain, UI) |
+| **Concurrency** | Kotlin Coroutines & Flow | Asynchronous streams, StateFlow reactive bindings |
+| **Media Playback** | AndroidX Media3 (ExoPlayer) | High-performance audio/video rendering |
+| **Image Loading** | Coil 3 | Disk & memory caching, palette extraction |
+| **Extraction Engine** | NewPipe Extractor | Lightweight, private stream metadata extraction |
+| **Local Database** | Room DB & Jetpack DataStore | Encrypted local storage for history, likes, and settings |
+| **Dependency Injection**| Dagger Hilt | Modular singleton and view model injection |
+| **Networking** | OkHttp & Ktor | Robust HTTP streaming and background downloads |
 
 ---
 
-## Acknowledgements
-
-PlayTube would not have been possible without the work of the open-source community.
-Special thanks to:
-* NewPipe
-* NewPipe Extractor
-* LibreTube
-* PipePipe
-* Flow
----
-
-## Important Notice
-
-> [!WARNING]
-> Publishing this application on the Google Play Store may violate Google's policies and/or the platform's terms of service. Always review the applicable policies and terms before distributing the application.
-
----
-
-## License and Code Usage
-
-PlayTube is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
-
-You are free to:
-
-* Use the source code.
-* Study how the application works.
-* Modify the source code.
-* Fork the project.
-* Redistribute copies of the project.
-
-### If You Modify or Redistribute PlayTube
-
-When distributing a modified or derivative version of PlayTube, you must comply with the GPL-3.0 license.
-
-This includes:
-* Keeping GPL-covered code under the GPL-3.0 license.
-* Providing the corresponding source code when required by the license.
-* Preserving applicable copyright and license notices.
-* Making GPL-covered source code available to recipients under GPL-3.0.
-* Clearly documenting significant changes made to the original code.
-
-For the complete license terms, see the [LICENSE](LICENSE) file.
-
----
-
-## Support PlayTube
-
-If you enjoy using PlayTube and would like to support its continued development, consider becoming a patron.
-
-Your support helps with continued development, maintenance, bug fixes, and future improvements.
+## 👨‍💻 Contributor & Lead Developer
 
 <div align="center">
 
-<a href="https://patreon.com/ArslanDaim77">
-  <img src="https://img.shields.io/badge/Become%20a%20Patron-Patreon-FF424D?style=for-the-badge&logo=patreon&logoColor=white" alt="Become a Patron">
-</a>
+### **SRIVATSAN R**
+**Lead Developer & Maintainer**
+
+[![GitHub](https://img.shields.io/badge/GitHub-srivatsan2007-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/srivatsan2007)
+[![Portfolio](https://img.shields.io/badge/Portfolio-srivatsan--portfolio-4F46E5?style=for-the-badge&logo=vercel&logoColor=white)](https://srivatsan-portfolio.vercel.app/)
+[![Repository](https://img.shields.io/badge/Repository-VIDENTRA-DEF1C4?style=for-the-badge&logo=git&logoColor=1E3A2F)](https://github.com/srivatsan2007/VIDENTRA---Watch-Freely.-Live-Fully.git)
+
+*Passionate Android & full-stack developer committed to creating beautiful, private, and high-performance digital experiences.*
 
 </div>
 
 ---
 
-<div align="center">
+## 🤝 Acknowledgements
 
-### If you enjoy PlayTube, consider giving the project a star
+Videntra is built upon the incredible work of the open-source community:
+- [NewPipe & NewPipe Extractor](https://github.com/TeamNewPipe/NewPipe)
+- [TeamNewPipe](https://github.com/TeamNewPipe)
+- [LibreTube](https://github.com/libre-tube/LibreTube)
+- [Android Open Source Project](https://source.android.com/)
 
-It helps more people discover the project and supports its continued development.
+---
 
-</div>
+## 📄 License
+
+Videntra is licensed under the **[GNU General Public License v3.0 (GPL-3.0)](LICENSE)**.
+
+```
+VIDENTRA - Watch Freely. Live Fully.
+Copyright (C) 2026 SRIVATSAN R
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+```
