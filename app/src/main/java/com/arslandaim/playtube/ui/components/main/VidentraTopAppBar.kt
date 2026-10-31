@@ -37,7 +37,7 @@ import com.arslandaim.playtube.ui.theme.IncognitoPurple
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayTubeTopAppBar(
+fun VidentraTopAppBar(
     isIncognitoMode: Boolean,
     currentRoute: String?,
     navController: NavHostController,
@@ -177,3 +177,20 @@ fun PlayTubeTopAppBar(
         )
     )
 }
+
+@Composable
+fun PlayTubeTopAppBar(
+    isIncognitoMode: Boolean,
+    currentRoute: String?,
+    navController: NavHostController,
+    mainViewModel: MainViewModel,
+    updateViewModel: UpdateViewModel,
+    modifier: Modifier = Modifier
+) = VidentraTopAppBar(
+    isIncognitoMode = isIncognitoMode,
+    currentRoute = currentRoute,
+    navController = navController,
+    mainViewModel = mainViewModel,
+    updateViewModel = updateViewModel,
+    modifier = modifier
+)

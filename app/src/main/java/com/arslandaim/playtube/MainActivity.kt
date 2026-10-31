@@ -63,7 +63,7 @@ import com.arslandaim.playtube.ui.components.DeveloperBirthdayDialog
 import com.arslandaim.playtube.ui.components.SignInRequiredDialog
 import com.arslandaim.playtube.ui.components.YouTubeAuthSheet
 import com.arslandaim.playtube.ui.components.main.OfflineBottomBanner
-import com.arslandaim.playtube.ui.components.main.PlayTubeTopAppBar
+import com.arslandaim.playtube.ui.components.main.VidentraTopAppBar
 import com.arslandaim.playtube.ui.components.main.RestorationBanner
 import com.arslandaim.playtube.ui.navigation.NavGraph
 import com.arslandaim.playtube.ui.navigation.Destination
@@ -72,7 +72,7 @@ import com.arslandaim.playtube.ui.screens.player.MiniPlayerManager
 import com.arslandaim.playtube.ui.screens.player.PlayerOverlay
 import com.arslandaim.playtube.ui.screens.settings.UpdateViewModel
 import com.arslandaim.playtube.ui.theme.IncognitoPurple
-import com.arslandaim.playtube.ui.theme.PlayTubeTheme
+import com.arslandaim.playtube.ui.theme.VidentraTheme
 import com.arslandaim.playtube.utils.ConnectivityObserver
 import com.arslandaim.playtube.utils.PTLog
 import com.google.common.util.concurrent.MoreExecutors
@@ -184,7 +184,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            PlayTubeTheme(
+            VidentraTheme(
                 darkTheme = darkTheme,
                 isDynamicColorEnabled = mainViewModel.isDynamicColorEnabled.collectAsStateWithLifecycle().value
             ) {
@@ -322,7 +322,7 @@ class MainActivity : AppCompatActivity() {
                                                 .fillMaxWidth()
                                                 .height(BOTTOM_BAR_HEIGHT)
                                             ) {
-                                                PlayTubeTopAppBar(
+                                                VidentraTopAppBar(
                                                     isIncognitoMode = isIncognitoMode,
                                                     currentRoute = currentRoute,
                                                     navController = navController,
@@ -379,7 +379,7 @@ class MainActivity : AppCompatActivity() {
                                     shadowElevation = 16.dp,
                                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
                                 ) {
-                                    PlayTubeBottomBar(navController = navController)
+                                    VidentraBottomBar(navController = navController)
                                 }
                             }
                         }
@@ -616,7 +616,7 @@ class MainActivity : AppCompatActivity() {
 }
 
 @Composable
-fun PlayTubeBottomBar(navController: androidx.navigation.NavHostController) {
+fun VidentraBottomBar(navController: androidx.navigation.NavHostController) {
     val items = listOf(
         Triple(Destination.Home, Icons.Default.Home, stringResource(R.string.tab_for_you)),
         Triple(Destination.Subscriptions, Icons.Default.Subscriptions, stringResource(R.string.subscriptions)),
@@ -676,3 +676,6 @@ fun PlayTubeBottomBar(navController: androidx.navigation.NavHostController) {
         }
     }
 }
+
+@Composable
+fun PlayTubeBottomBar(navController: androidx.navigation.NavHostController) = VidentraBottomBar(navController)

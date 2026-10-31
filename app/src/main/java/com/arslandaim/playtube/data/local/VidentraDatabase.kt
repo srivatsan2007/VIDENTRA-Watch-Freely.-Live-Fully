@@ -28,7 +28,7 @@ import androidx.room.TypeConverters
     version = 15
 )
 @TypeConverters(Converters::class)
-abstract class PlayTubeDatabase : RoomDatabase() {
+abstract class VidentraDatabase : RoomDatabase() {
     abstract fun downloadDao(): DownloadDao
     abstract fun missionDao(): MissionDao
     abstract fun historyDao(): HistoryDao
@@ -41,3 +41,5 @@ abstract class PlayTubeDatabase : RoomDatabase() {
     abstract fun localPlaylistDao(): LocalPlaylistDao
     abstract fun feedCacheDao(): FeedCacheDao
 }
+
+typealias PlayTubeDatabase = VidentraDatabase

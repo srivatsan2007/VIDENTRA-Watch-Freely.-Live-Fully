@@ -52,7 +52,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun PlayTubeTheme(
+fun VidentraTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     isDynamicColorEnabled: Boolean = false,
     content: @Composable () -> Unit
@@ -85,3 +85,10 @@ fun PlayTubeTheme(
         content = content
     )
 }
+
+@Composable
+fun PlayTubeTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    isDynamicColorEnabled: Boolean = false,
+    content: @Composable () -> Unit
+) = VidentraTheme(darkTheme = darkTheme, isDynamicColorEnabled = isDynamicColorEnabled, content = content)

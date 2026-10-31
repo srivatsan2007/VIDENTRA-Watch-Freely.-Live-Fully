@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.arslandaim.playtube.data.local.DownloadDao
 import com.arslandaim.playtube.data.local.FavoriteDao
 import com.arslandaim.playtube.data.local.HistoryDao
-import com.arslandaim.playtube.data.local.PlayTubeDatabase
+import com.arslandaim.playtube.data.local.VidentraDatabase
 import com.arslandaim.playtube.data.local.PlaylistFavoriteDao
 import com.arslandaim.playtube.data.local.SearchHistoryDao
 import com.arslandaim.playtube.data.local.SubscriptionDao
@@ -31,7 +31,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): PlayTubeDatabase {
+    fun provideDatabase(@ApplicationContext context: Context): VidentraDatabase {
         fun createAllTablesIfNotExists(db: SupportSQLiteDatabase) {
             db.execSQL("CREATE TABLE IF NOT EXISTS `downloads` (`videoId` TEXT NOT NULL, `title` TEXT NOT NULL, `thumbnailUrl` TEXT NOT NULL, `uploaderName` TEXT NOT NULL, `filePath` TEXT NOT NULL, `totalSize` INTEGER NOT NULL, `downloadedSize` INTEGER NOT NULL, `status` TEXT NOT NULL, `quality` TEXT, `format` TEXT, `videoUrl` TEXT, `audioUrl` TEXT, `playlistId` TEXT, `playlistTitle` TEXT, PRIMARY KEY(`videoId`))")
             db.execSQL("CREATE TABLE IF NOT EXISTS `history` (`videoId` TEXT NOT NULL, `title` TEXT NOT NULL, `thumbnailUrl` TEXT NOT NULL, `uploaderName` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `progressMs` INTEGER NOT NULL, `durationMs` INTEGER NOT NULL, PRIMARY KEY(`videoId`))")
@@ -64,7 +64,7 @@ object DatabaseModule {
 
         return Room.databaseBuilder(
             context,
-            PlayTubeDatabase::class.java,
+            VidentraDatabase::class.java,
             "playtube_db"
         )
         .addMigrations(*migrations)
@@ -73,57 +73,57 @@ object DatabaseModule {
     }
 
     @Provides
-    fun provideDownloadDao(database: PlayTubeDatabase): DownloadDao {
+    fun provideDownloadDao(database: VidentraDatabase): DownloadDao {
         return database.downloadDao()
     }
 
     @Provides
-    fun provideHistoryDao(database: PlayTubeDatabase): HistoryDao {
+    fun provideHistoryDao(database: VidentraDatabase): HistoryDao {
         return database.historyDao()
     }
 
     @Provides
-    fun provideFavoriteDao(database: PlayTubeDatabase): FavoriteDao {
+    fun provideFavoriteDao(database: VidentraDatabase): FavoriteDao {
         return database.favoriteDao()
     }
 
     @Provides
-    fun providePlaylistFavoriteDao(database: PlayTubeDatabase): PlaylistFavoriteDao {
+    fun providePlaylistFavoriteDao(database: VidentraDatabase): PlaylistFavoriteDao {
         return database.playlistFavoriteDao()
     }
 
     @Provides
-    fun provideSubscriptionDao(database: PlayTubeDatabase): SubscriptionDao {
+    fun provideSubscriptionDao(database: VidentraDatabase): SubscriptionDao {
         return database.subscriptionDao()
     }
 
     @Provides
-    fun provideSearchHistoryDao(database: PlayTubeDatabase): SearchHistoryDao {
+    fun provideSearchHistoryDao(database: VidentraDatabase): SearchHistoryDao {
         return database.searchHistoryDao()
     }
 
     @Provides
-    fun provideUserInterestDao(database: PlayTubeDatabase): UserInterestDao {
+    fun provideUserInterestDao(database: VidentraDatabase): UserInterestDao {
         return database.userInterestDao()
     }
 
     @Provides
-    fun provideBlacklistDao(database: PlayTubeDatabase): BlacklistDao {
+    fun provideBlacklistDao(database: VidentraDatabase): BlacklistDao {
         return database.blacklistDao()
     }
 
     @Provides
-    fun provideLocalPlaylistDao(database: PlayTubeDatabase): com.arslandaim.playtube.data.local.LocalPlaylistDao {
+    fun provideLocalPlaylistDao(database: VidentraDatabase): com.arslandaim.playtube.data.local.LocalPlaylistDao {
         return database.localPlaylistDao()
     }
 
     @Provides
-    fun provideFeedCacheDao(database: PlayTubeDatabase): com.arslandaim.playtube.data.local.FeedCacheDao {
+    fun provideFeedCacheDao(database: VidentraDatabase): com.arslandaim.playtube.data.local.FeedCacheDao {
         return database.feedCacheDao()
     }
 
     @Provides
-    fun provideMissionDao(database: PlayTubeDatabase): com.arslandaim.playtube.data.local.MissionDao {
+    fun provideMissionDao(database: VidentraDatabase): com.arslandaim.playtube.data.local.MissionDao {
         return database.missionDao()
     }
 }

@@ -35,7 +35,7 @@ import javax.inject.Singleton
 @Singleton
 class DataManagerRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val database: PlayTubeDatabase,
+    private val database: VidentraDatabase,
     private val preferencesManager: PreferencesManager,
     private val gson: Gson
 ) : DataManagerRepository {

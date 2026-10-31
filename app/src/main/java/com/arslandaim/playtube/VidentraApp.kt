@@ -15,7 +15,7 @@ import androidx.work.Configuration
 import com.arslandaim.playtube.BuildConfig
 import com.arslandaim.playtube.data.network.YouTubeDownloader
 import com.arslandaim.playtube.data.local.PreferencesManager
-import com.arslandaim.playtube.data.local.PlayTubeDatabase
+import com.arslandaim.playtube.data.local.VidentraDatabase
 import androidx.hilt.work.HiltWorkerFactory
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
@@ -36,14 +36,14 @@ import javax.inject.Inject
 import java.io.File
 
 @HiltAndroidApp
-class PlayTubeApp : Application(), Configuration.Provider, SingletonImageLoader.Factory {
+class VidentraApp : Application(), Configuration.Provider, SingletonImageLoader.Factory {
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var okHttpClient: OkHttpClient
     @Inject lateinit var imageLoader: ImageLoader
     @Inject lateinit var downloadRepository: DownloadRepository
     @Inject lateinit var connectivityObserver: ConnectivityObserver
     @Inject lateinit var preferencesManager: PreferencesManager
-    @Inject lateinit var database: PlayTubeDatabase
+    @Inject lateinit var database: VidentraDatabase
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
@@ -81,7 +81,7 @@ class PlayTubeApp : Application(), Configuration.Provider, SingletonImageLoader.
             checkVersionAndCleanup()
             prewarmNetwork()
         } catch (e: Exception) {
-            PTLog.e("PlayTubeApp", "Critical error during Application initialization", e)
+            PTLog.e("VidentraApp", "Critical error during Application initialization", e)
         }
     }
 
@@ -92,12 +92,12 @@ class PlayTubeApp : Application(), Configuration.Provider, SingletonImageLoader.
                 val currentVersion = BuildConfig.VERSION_CODE
                 
                 if (lastVersion != currentVersion) {
-                    PTLog.i("PlayTubeApp", "Detected update from $lastVersion to $currentVersion. Performing cache cleanup.")
+                    PTLog.i("VidentraApp", "Detected update from $lastVersion to $currentVersion. Performing cache cleanup.")
                     performUpdateCleanup()
                     preferencesManager.setLastAppVersion(currentVersion)
                 }
             } catch (e: Exception) {
-                PTLog.e("PlayTubeApp", "Version check or cleanup failed", e)
+                PTLog.e("VidentraApp", "Version check or cleanup failed", e)
             }
         }
     }
@@ -113,9 +113,9 @@ class PlayTubeApp : Application(), Configuration.Provider, SingletonImageLoader.
                 deleteRecursively(file)
             }
             
-            PTLog.i("PlayTubeApp", "Update cleanup completed successfully")
+            PTLog.i("VidentraApp", "Update cleanup completed successfully")
         } catch (e: Exception) {
-            PTLog.e("PlayTubeApp", "Error during update cleanup", e)
+            PTLog.e("VidentraApp", "Error during update cleanup", e)
         }
     }
 
@@ -132,11 +132,11 @@ class PlayTubeApp : Application(), Configuration.Provider, SingletonImageLoader.
 
         val callback = object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: java.io.IOException) {
-                PTLog.w("PlayTubeApp", "Network pre-warming failed for ${call.request().url}: ${e.message}")
+                PTLog.w("VidentraApp", "Network pre-warming failed for ${call.request().url}: ${e.message}")
             }
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 response.close()
-                PTLog.d("PlayTubeApp", "Network pre-warmed for ${call.request().url}")
+                PTLog.d("VidentraApp", "Network pre-warmed for ${call.request().url}")
             }
         }
 
