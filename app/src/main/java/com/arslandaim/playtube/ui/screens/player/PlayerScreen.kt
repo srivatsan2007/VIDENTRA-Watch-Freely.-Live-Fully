@@ -47,6 +47,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -429,7 +430,7 @@ private fun PlayerContent(
         if (isLandscape) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         } else {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
     }
 
@@ -467,10 +468,12 @@ private fun PlayerContent(
         if (isLandscape) {
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         } else {
             controller.show(WindowInsetsCompat.Type.systemBars())
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             aspectRatioText = "Fit"
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
 
@@ -947,7 +950,7 @@ private fun PlayerContent(
                                 },
                                 onSwipeUp = {
                                     if (!isLandscape) {
-                                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                                     }
                                 },
                                 onDragStart = {
@@ -1062,11 +1065,37 @@ private fun PlayerContent(
                                 modifier = Modifier.align(Alignment.CenterEnd)
                             )
 
-                            // Custom Controls Overlay
+                            // Persistent Progress Bar (Always visible at the very bottom border)
+                            PersistentProgressBar(
+                                progress = {
+                                    val dur = duration()
+                                    if (isLive) 1f else if (dur > 0) currentPosition().toFloat() / dur else 0f
+                                },
+                                bufferedProgress = {
+                                    val dur = duration()
+                                    if (isLive) 1f else if (dur > 0) bufferedPosition().toFloat() / dur else 0f
+                                },
+                                isInteractive = controlsVisible && !isLive,
+                                chapters = chapters,
+                                durationMs = duration(),
+                                onSeek = { percentage: Float ->
+                                    val totalDuration = duration()
+                                    if (totalDuration > 0) {
+                                        onSeekTo((percentage * totalDuration).toLong())
+                                    }
+                                },
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .fillMaxWidth()
+                                    .zIndex(1f)
+                            )
+
+                            // Custom Controls Overlay (Rendered with higher zIndex so buttons always take precedence)
                             androidx.compose.animation.AnimatedVisibility(
                                 visible = controlsVisible,
                                 enter = androidx.compose.animation.fadeIn(),
-                                exit = androidx.compose.animation.fadeOut()
+                                exit = androidx.compose.animation.fadeOut(),
+                                modifier = Modifier.zIndex(5f)
                             ) {
                                 PlayerControlsOverlay(
                                     isPlaying = isPlaying,
@@ -1091,31 +1120,6 @@ private fun PlayerContent(
                                     onBack = onBack
                                 )
                             }
-
-                            // Persistent Progress Bar (Always visible at the very bottom border)
-                            // move it after the controls to ensure it stays on top of the darkened overlay background
-                            PersistentProgressBar(
-                                progress = {
-                                    val dur = duration()
-                                    if (isLive) 1f else if (dur > 0) currentPosition().toFloat() / dur else 0f
-                                },
-                                bufferedProgress = {
-                                    val dur = duration()
-                                    if (isLive) 1f else if (dur > 0) bufferedPosition().toFloat() / dur else 0f
-                                },
-                                isInteractive = controlsVisible && !isLive,
-                                chapters = chapters,
-                                durationMs = duration(),
-                                onSeek = { percentage: Float ->
-                                    val totalDuration = duration()
-                                    if (totalDuration > 0) {
-                                        onSeekTo((percentage * totalDuration).toLong())
-                                    }
-                                },
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .fillMaxWidth()
-                            )
 
                             LaunchedEffect(controlsVisible, player.isPlaying) {
                                 if (controlsVisible && player.isPlaying) {
@@ -1520,7 +1524,7 @@ private fun PlayerControlsOverlay(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .displayCutoutPadding()
-                .padding(bottom = 12.dp) // Sit closer to the bottom border
+                .padding(bottom = 18.dp) // Sit comfortably above the bottom border seekbar
         ) {
             // Time Display, Live Badge & Fullscreen Button
             Row(
@@ -1588,13 +1592,13 @@ private fun PlayerControlsOverlay(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onToggleFullscreen()
                     },
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(44.dp)
                 ) {
                     Icon(
                         imageVector = if (isLandscape) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
                         contentDescription = if (isLandscape) "Exit Fullscreen" else "Enter Fullscreen",
                         tint = Color.White,
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }

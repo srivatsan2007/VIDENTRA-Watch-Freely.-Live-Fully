@@ -84,7 +84,7 @@ fun PersistentProgressBar(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .height(if (isInteractive) 56.dp else animatedHeight)
+            .height(if (isInteractive) 16.dp else animatedHeight)
             .then(
                 if (isInteractive) {
                     Modifier

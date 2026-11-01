@@ -34,6 +34,8 @@ import com.arslandaim.playtube.R
 import com.arslandaim.playtube.ui.navigation.Destination
 import com.arslandaim.playtube.ui.screens.settings.UpdateViewModel
 import com.arslandaim.playtube.ui.theme.IncognitoPurple
+import coil3.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,6 +125,7 @@ fun VidentraTopAppBar(
 
             val isYouTubeLoggedIn by mainViewModel.isYouTubeLoggedIn.collectAsStateWithLifecycle()
             val youtubeUserName by mainViewModel.youtubeUserName.collectAsStateWithLifecycle()
+            val youtubeUserAvatar by mainViewModel.youtubeUserAvatar.collectAsStateWithLifecycle()
 
             IconButton(onClick = {
                 if (isYouTubeLoggedIn) {
@@ -132,12 +135,23 @@ fun VidentraTopAppBar(
                 }
             }) {
                 Box(contentAlignment = Alignment.TopEnd) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = if (isYouTubeLoggedIn) youtubeUserName ?: "Account" else "Sign in",
-                        tint = if (isYouTubeLoggedIn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    if (isYouTubeLoggedIn && !youtubeUserAvatar.isNullOrBlank()) {
+                        AsyncImage(
+                            model = youtubeUserAvatar,
+                            contentDescription = youtubeUserName ?: "Account",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = if (isYouTubeLoggedIn) youtubeUserName ?: "Account" else "Sign in",
+                            tint = if (isYouTubeLoggedIn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                     if (isYouTubeLoggedIn) {
                         Box(
                             modifier = Modifier

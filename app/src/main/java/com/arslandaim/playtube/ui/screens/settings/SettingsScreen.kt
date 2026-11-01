@@ -62,7 +62,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Button
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -101,6 +106,8 @@ fun SettingsScreen(
 ) {
     val isYouTubeLoggedIn by viewModel.isYouTubeLoggedIn.collectAsStateWithLifecycle()
     val youtubeUserName by viewModel.youtubeUserName.collectAsStateWithLifecycle()
+    val youtubeUserEmail by viewModel.youtubeUserEmail.collectAsStateWithLifecycle()
+    val youtubeUserAvatar by viewModel.youtubeUserAvatar.collectAsStateWithLifecycle()
     val isSearchHistoryPaused by viewModel.isSearchHistoryPaused.collectAsStateWithLifecycle()
     val isPipEnabled by viewModel.isPipEnabled.collectAsStateWithLifecycle()
     val isBackgroundPlayEnabled by viewModel.isBackgroundPlayEnabled.collectAsStateWithLifecycle()
@@ -131,6 +138,8 @@ fun SettingsScreen(
         updateInfo = updateInfo,
         isYouTubeLoggedIn = isYouTubeLoggedIn,
         youtubeUserName = youtubeUserName,
+        youtubeUserEmail = youtubeUserEmail,
+        youtubeUserAvatar = youtubeUserAvatar,
         onOpenSignIn = onOpenSignIn,
         onSignOutYouTube = viewModel::signOutYouTube,
         onSetSearchHistoryPaused = viewModel::setSearchHistoryPaused,
@@ -170,6 +179,8 @@ private fun SettingsContent(
     updateInfo: com.arslandaim.playtube.domain.repository.UpdateInfo,
     isYouTubeLoggedIn: Boolean,
     youtubeUserName: String?,
+    youtubeUserEmail: String? = null,
+    youtubeUserAvatar: String? = null,
     onOpenSignIn: () -> Unit,
     onSignOutYouTube: () -> Unit,
     onSetSearchHistoryPaused: (Boolean) -> Unit,
@@ -313,12 +324,94 @@ private fun SettingsContent(
             item {
                 SettingsGroup(title = "Account") {
                     if (isYouTubeLoggedIn) {
-                        SettingsItem(
-                            title = youtubeUserName?.ifBlank { "YouTube User" } ?: "YouTube User",
-                            subtitle = "Connected to YouTube • Tap to sign out",
-                            icon = Icons.Default.AccountCircle,
-                            onClick = { showSignOutConfirm = true }
-                        )
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Color.Transparent
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // User Avatar or fallback
+                                    Box(
+                                        modifier = Modifier
+                                            .size(54.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primaryContainer),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (!youtubeUserAvatar.isNullOrBlank()) {
+                                            AsyncImage(
+                                                model = youtubeUserAvatar,
+                                                contentDescription = "User Avatar",
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clip(CircleShape),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        } else {
+                                            val initial = youtubeUserName?.firstOrNull()?.uppercase() ?: "U"
+                                            Text(
+                                                text = initial,
+                                                style = MaterialTheme.typography.titleLarge,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width(16.dp))
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = youtubeUserName?.ifBlank { "Google User" } ?: "Google User",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (!youtubeUserEmail.isNullOrBlank()) {
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = youtubeUserEmail,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(7.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color(0xFF4CAF50))
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "Connected to Google & YouTube",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color(0xFF4CAF50)
+                                            )
+                                        }
+                                    }
+
+                                    IconButton(
+                                        onClick = { showSignOutConfirm = true }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                                            contentDescription = "Sign Out",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     } else {
                         SettingsItem(
                             title = "Google / YouTube Account",

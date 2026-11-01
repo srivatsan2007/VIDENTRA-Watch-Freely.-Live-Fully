@@ -64,6 +64,9 @@ class SettingsViewModel @Inject constructor(
     val youtubeUserEmail: StateFlow<String?> = preferencesManager.youtubeUserEmail
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val youtubeUserAvatar: StateFlow<String?> = preferencesManager.youtubeUserAvatar
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     val isPlayerGesturesEnabled: StateFlow<Boolean> = preferencesManager.isPlayerGesturesEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
