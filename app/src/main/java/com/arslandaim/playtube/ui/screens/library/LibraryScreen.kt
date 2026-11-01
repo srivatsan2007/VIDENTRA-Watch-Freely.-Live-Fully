@@ -60,6 +60,8 @@ fun LibraryScreen(
     val playlists by viewModel.playlists.collectAsStateWithLifecycle()
     val localPlaylists by viewModel.localPlaylists.collectAsStateWithLifecycle()
     val savedVideoIds by viewModel.savedVideoIds.collectAsStateWithLifecycle()
+    val watchLaterPlaylist by viewModel.watchLaterPlaylist.collectAsStateWithLifecycle()
+    val watchLaterVideos by viewModel.watchLaterVideos.collectAsStateWithLifecycle()
 
     LibraryDashboard(
         downloads = downloads,
@@ -69,8 +71,11 @@ fun LibraryScreen(
         playlists = playlists,
         localPlaylists = localPlaylists,
         savedVideoIds = savedVideoIds,
+        watchLaterPlaylist = watchLaterPlaylist,
+        watchLaterVideos = watchLaterVideos,
         onCreateLocalPlaylist = viewModel::createLocalPlaylist,
         onDeleteLocalPlaylist = viewModel::deleteLocalPlaylist,
+        onRemoveFromWatchLater = viewModel::removeFromWatchLater,
         onAddToPlaylistClick = onAddToPlaylistClick,
         onDeleteDownload = viewModel::deleteDownload,
         onCancelDownload = viewModel::cancelDownload,
@@ -96,8 +101,11 @@ private fun LibraryDashboard(
     playlists: List<com.arslandaim.playtube.data.local.PlaylistFavoriteEntity>,
     localPlaylists: List<com.arslandaim.playtube.data.local.LocalPlaylistEntity>,
     savedVideoIds: Set<String>,
+    watchLaterPlaylist: com.arslandaim.playtube.data.local.LocalPlaylistEntity? = null,
+    watchLaterVideos: List<com.arslandaim.playtube.data.local.LocalPlaylistVideoEntity> = emptyList(),
     onCreateLocalPlaylist: (String) -> Unit,
     onDeleteLocalPlaylist: (com.arslandaim.playtube.data.local.LocalPlaylistEntity) -> Unit,
+    onRemoveFromWatchLater: (String) -> Unit = {},
     onAddToPlaylistClick: (VideoItem) -> Unit,
     onDeleteDownload: (String) -> Unit,
     onCancelDownload: (String) -> Unit,
@@ -132,7 +140,64 @@ private fun LibraryDashboard(
                     subscriptionCount = subscriptions.size,
                     favoriteCount = favorites.size
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            // Quick Access Shelf (Downloads, Watch Later, History)
+            item {
+                LibraryShortcutsRow(
+                    downloadCount = downloads.size,
+                    watchLaterCount = watchLaterVideos.size,
+                    historyCount = history.size,
+                    onSeeAllDownloads = onSeeAllDownloads,
+                    onWatchLaterClick = {
+                        watchLaterPlaylist?.let { onPlaylistClick("local:${it.id}") }
+                    },
+                    onSeeAllHistory = onSeeAllHistory
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Watch Later Section (if has videos)
+            if (watchLaterVideos.isNotEmpty()) {
+                item {
+                    ModernSectionHeader(
+                        title = "Watch Later",
+                        icon = Icons.Default.WatchLater,
+                        onSeeAllClick = {
+                            watchLaterPlaylist?.let { onPlaylistClick("local:${it.id}") }
+                        }
+                    )
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        items(watchLaterVideos.take(15)) { item ->
+                            ModernWatchLaterCard(
+                                item = item,
+                                onClick = {
+                                    onVideoClick(
+                                        VideoItem(
+                                            id = item.videoId,
+                                            title = item.title,
+                                            thumbnailUrl = item.thumbnailUrl,
+                                            uploaderName = item.uploaderName,
+                                            uploaderUrl = null,
+                                            uploaderThumbnailUrl = null,
+                                            viewCount = 0,
+                                            uploadDate = null,
+                                            rawUploadDate = null,
+                                            duration = item.duration
+                                        )
+                                    )
+                                },
+                                onRemove = { onRemoveFromWatchLater(item.videoId) }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(18.dp))
+                }
             }
 
             // 3. History Section (More spacious)

@@ -79,6 +79,9 @@ class PlayerViewModel @Inject constructor(
     private val _isSaved = MutableStateFlow(false)
     val isSaved: StateFlow<Boolean> = _isSaved.asStateFlow()
 
+    private val _isWatchLater = MutableStateFlow(false)
+    val isWatchLater: StateFlow<Boolean> = _isWatchLater.asStateFlow()
+
     private val _isSubscribed = MutableStateFlow(false)
     val isSubscribed: StateFlow<Boolean> = _isSubscribed.asStateFlow()
 
@@ -359,6 +362,7 @@ class PlayerViewModel @Inject constructor(
                     _currentQuality.value = "Local (${download.quality})"
                     updatePlaylistIndex()
                     launch { isSavedUseCase(videoId).collectLatest { _isSaved.value = it } }
+                    launch { libraryRepository.isWatchLater(videoId).collectLatest { _isWatchLater.value = it } }
                     return@launch
                 }
             }
@@ -381,6 +385,7 @@ class PlayerViewModel @Inject constructor(
                     val uploaderId = VideoUtils.extractChannelId(bundle.uploaderUrl) ?: bundle.uploaderUrl
                     uploaderId?.let { id -> launch { isSubscribedUseCase(id).collectLatest { _isSubscribed.value = it } } }
                     launch { isSavedUseCase(videoId).collectLatest { _isSaved.value = it } }
+                    launch { libraryRepository.isWatchLater(videoId).collectLatest { _isWatchLater.value = it } }
                 }
                 .onFailure { _uiState.value = PlayerUiState.Error(PlayTubeError.fromThrowable(it)) }
         }
@@ -444,6 +449,7 @@ class PlayerViewModel @Inject constructor(
         loadingJob = viewModelScope.launch {
             launch { isFavoriteUseCase(videoId).collectLatest { _isFavorite.value = it } }
             launch { isSavedUseCase(videoId).collectLatest { _isSaved.value = it } }
+            launch { libraryRepository.isWatchLater(videoId).collectLatest { _isWatchLater.value = it } }
             
             // Fetch SponsorBlock segments
             launch {
@@ -518,6 +524,7 @@ class PlayerViewModel @Inject constructor(
     private fun resetPlaybackState(videoId: String, video: VideoItem, keepPlaylist: Boolean = false) {
         _isFavorite.value = false
         _isSaved.value = false
+        _isWatchLater.value = false
         _isSubscribed.value = false
         _currentQuality.value = null
         _isCcEnabled.value = false
@@ -569,6 +576,16 @@ class PlayerViewModel @Inject constructor(
             val isFav = libraryRepository.isFavorite(target.id).first()
             toggleFavoriteUseCase(FavoriteEntity(videoId = target.id, title = target.title, thumbnailUrl = target.thumbnailUrl, uploaderName = target.uploaderName))
             _snackbarMessage.emit(if (isFav) context.getString(R.string.removed_from_favorites) else context.getString(R.string.added_to_favorites))
+        }
+    }
+
+    fun toggleWatchLater(video: VideoItem? = null) {
+        val target = video ?: currentVideoItem ?: return
+        viewModelScope.launch {
+            val added = libraryRepository.toggleWatchLater(target)
+            _snackbarMessage.emit(
+                if (added) "Saved to Watch Later" else "Removed from Watch Later"
+            )
         }
     }
 

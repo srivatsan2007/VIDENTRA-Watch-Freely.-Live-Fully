@@ -7,7 +7,7 @@ package com.arslandaim.playtube.data.repository
 
 import com.arslandaim.playtube.data.local.*
 import com.arslandaim.playtube.domain.repository.LibraryRepository
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class LibraryRepositoryImpl @Inject constructor(
@@ -185,6 +185,62 @@ class LibraryRepositoryImpl @Inject constructor(
 
     override fun getPlaylistsContainingVideo(videoId: String): Flow<List<Int>> = 
         localPlaylistDao.getPlaylistsContainingVideo(videoId)
+
+    // Watch Later
+    companion object {
+        const val WATCH_LATER_NAME = "Watch Later"
+    }
+
+    override fun getWatchLaterPlaylist(): Flow<LocalPlaylistEntity?> =
+        localPlaylistDao.getAllPlaylists().map { playlists ->
+            playlists.firstOrNull { it.name.equals(WATCH_LATER_NAME, ignoreCase = true) }
+        }
+
+    override suspend fun getOrCreateWatchLaterPlaylist(): LocalPlaylistEntity {
+        val existing = localPlaylistDao.getAllLocalPlaylistsStatic().firstOrNull { 
+            it.name.equals(WATCH_LATER_NAME, ignoreCase = true) 
+        }
+        if (existing != null) return existing
+        val newId = localPlaylistDao.createPlaylist(
+            LocalPlaylistEntity(
+                name = WATCH_LATER_NAME,
+                description = "Videos saved to watch later"
+            )
+        )
+        return LocalPlaylistEntity(
+            id = newId.toInt(),
+            name = WATCH_LATER_NAME,
+            description = "Videos saved to watch later"
+        )
+    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    override fun getWatchLaterVideos(): Flow<List<LocalPlaylistVideoEntity>> =
+        getWatchLaterPlaylist().flatMapLatest { playlist ->
+            if (playlist == null) kotlinx.coroutines.flow.flowOf(emptyList())
+            else localPlaylistDao.getVideosForPlaylist(playlist.id)
+        }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    override fun isWatchLater(videoId: String): Flow<Boolean> =
+        getWatchLaterPlaylist().flatMapLatest { playlist ->
+            if (playlist == null) kotlinx.coroutines.flow.flowOf(false)
+            else localPlaylistDao.getVideosForPlaylist(playlist.id).map { videos ->
+                videos.any { it.videoId == videoId }
+            }
+        }
+
+    override suspend fun toggleWatchLater(video: com.arslandaim.playtube.domain.model.VideoItem): Boolean {
+        val playlist = getOrCreateWatchLaterPlaylist()
+        val exists = localPlaylistDao.isVideoInPlaylist(playlist.id, video.id)
+        return if (exists) {
+            removeVideoFromLocalPlaylist(playlist.id, video.id)
+            false
+        } else {
+            addVideoToLocalPlaylist(playlist.id, video)
+            true
+        }
+    }
 
     override fun getCachedFeed(key: String): Flow<FeedCacheEntity?> = feedCacheDao.getFeed(key)
 

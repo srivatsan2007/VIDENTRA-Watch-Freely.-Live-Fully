@@ -136,11 +136,13 @@ fun PlayerScreen(
     onBack: () -> Unit,
     onVideoClick: (VideoItem) -> Unit,
     onChannelClick: (String) -> Unit,
-    onAddToPlaylistClick: (VideoItem) -> Unit
+    onAddToPlaylistClick: (VideoItem) -> Unit,
+    onNavigateToDownloads: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
     val isSaved by viewModel.isSaved.collectAsStateWithLifecycle()
+    val isWatchLater by viewModel.isWatchLater.collectAsStateWithLifecycle()
     val isSubscribed by viewModel.isSubscribed.collectAsStateWithLifecycle()
     val playbackSpeed by viewModel.playbackSpeed.collectAsStateWithLifecycle()
     val currentQuality by viewModel.currentQuality.collectAsStateWithLifecycle()
@@ -230,6 +232,7 @@ fun PlayerScreen(
             uiState = uiState,
             isFavorite = isFavorite,
             isSaved = isSaved,
+            isWatchLater = isWatchLater,
             isSubscribed = isSubscribed,
             playbackSpeed = playbackSpeed,
             currentQuality = currentQuality,
@@ -256,6 +259,7 @@ fun PlayerScreen(
             syncTransition = syncTransition,
             snackbarMessage = viewModel.snackbarMessage,
             onToggleFavorite = { viewModel.toggleFavorite(it) },
+            onToggleWatchLater = { viewModel.toggleWatchLater() },
             onToggleSubscription = viewModel::toggleSubscription,
             onSetQuality = viewModel::setQuality,
             onSetPlaybackSpeed = viewModel::setPlaybackSpeed,
@@ -277,6 +281,7 @@ fun PlayerScreen(
             onVideoClick = onVideoClick,
             onChannelClick = onChannelClick,
             onAddToPlaylistClick = onAddToPlaylistClick,
+            onNavigateToDownloads = onNavigateToDownloads,
             onRetry = { viewModel.currentVideoItem?.let { viewModel.loadVideo(it) } },
             repeatMode = repeatMode,
             onRepeatClick = viewModel::cycleRepeatMode,
@@ -325,6 +330,7 @@ private fun PlayerContent(
     uiState: PlayerUiState,
     isFavorite: Boolean,
     isSaved: Boolean,
+    isWatchLater: Boolean = false,
     isSubscribed: Boolean,
     playbackSpeed: Float,
     currentQuality: String?,
@@ -351,6 +357,7 @@ private fun PlayerContent(
     syncTransition: InfiniteTransition,
     snackbarMessage: SharedFlow<String>,
     onToggleFavorite: (VideoItem?) -> Unit,
+    onToggleWatchLater: () -> Unit = {},
     onToggleSubscription: () -> Unit,
     onSetQuality: (com.arslandaim.playtube.domain.model.StreamItem?) -> Unit,
     onSetPlaybackSpeed: (Float) -> Unit,
@@ -372,6 +379,7 @@ private fun PlayerContent(
     onVideoClick: (VideoItem) -> Unit,
     onChannelClick: (String) -> Unit,
     onAddToPlaylistClick: (VideoItem) -> Unit,
+    onNavigateToDownloads: () -> Unit = {},
     onRetry: () -> Unit,
     repeatMode: RepeatMode,
     onRepeatClick: () -> Unit,
@@ -1222,12 +1230,14 @@ private fun PlayerContent(
                                         isSubscribed = isSubscribed,
                                         isFavorite = isFavorite,
                                         isSaved = isSaved,
+                                        isWatchLater = isWatchLater,
                                         isDownloaded = downloadedIds.contains(videoId),
                                         repeatMode = repeatMode,
                                         comments = comments,
                                         commentCount = null, // Extractor doesn't always provide count easily
                                         onToggleSubscription = onToggleSubscription,
                                         onToggleFavorite = { onToggleFavorite(null) },
+                                        onToggleWatchLater = onToggleWatchLater,
                                         onSaveClick = { 
                                             uiState.bundle.let { bundle ->
                                                 onAddToPlaylistClick(
@@ -1244,7 +1254,24 @@ private fun PlayerContent(
                                                 )
                                             }
                                         },
-                                        onDownloadClick = { if (!downloadedIds.contains(videoId)) onDownloadClick(null) },
+                                        onDownloadClick = {
+                                            val currentItem = VideoItem(
+                                                id = videoId,
+                                                title = uiState.title,
+                                                thumbnailUrl = uiState.bundle.thumbnailUrl ?: "",
+                                                uploaderName = uiState.uploader,
+                                                uploaderUrl = uiState.bundle.uploaderUrl,
+                                                uploaderThumbnailUrl = uiState.bundle.uploaderThumbnailUrl,
+                                                viewCount = uiState.bundle.viewCount,
+                                                uploadDate = uiState.bundle.uploadDate,
+                                                duration = duration() / 1000
+                                            )
+                                            if (downloadedIds.contains(videoId)) {
+                                                onNavigateToDownloads()
+                                            } else {
+                                                onDownloadClick(currentItem)
+                                            }
+                                        },
                                         onShareClick = onShareVideo,
                                         onRepeatClick = onRepeatClick,
                                         onChannelClick = onChannelClick,

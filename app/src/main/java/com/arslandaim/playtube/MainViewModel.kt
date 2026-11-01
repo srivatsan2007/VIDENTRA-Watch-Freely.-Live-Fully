@@ -102,6 +102,9 @@ class MainViewModel @Inject constructor(
     private val _showBirthdayDialog = MutableStateFlow(false)
     val showBirthdayDialog: StateFlow<Boolean> = _showBirthdayDialog.asStateFlow()
 
+    private val _isUpdateDialogDismissed = MutableStateFlow(false)
+    val isUpdateDialogDismissed: StateFlow<Boolean> = _isUpdateDialogDismissed.asStateFlow()
+
     init {
         viewModelScope.launch {
             // Check offline status on startup to trigger dialog
@@ -142,6 +145,10 @@ class MainViewModel @Inject constructor(
             preferencesManager.setLastAppVersion(BuildConfig.VERSION_CODE)
             _showWelcomeDialog.value = false
         }
+    }
+
+    fun dismissUpdateDialog() {
+        _isUpdateDialogDismissed.value = true
     }
 
     fun dismissBirthdayDialog() {

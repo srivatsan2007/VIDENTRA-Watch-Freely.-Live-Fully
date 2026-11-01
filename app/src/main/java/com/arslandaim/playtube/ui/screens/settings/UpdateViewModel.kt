@@ -32,9 +32,20 @@ class UpdateViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            try {
+                updateRepository.checkForUpdates()
+            } catch (_: Exception) {
+                // Silently ignore network failures on startup
+            }
+        }
+        viewModelScope.launch {
             isAutoUpdateEnabled.collectLatest { enabled ->
                 if (enabled) {
-                    updateRepository.checkForUpdates()
+                    try {
+                        updateRepository.checkForUpdates()
+                    } catch (_: Exception) {
+                        // Silently ignore
+                    }
                 }
             }
         }

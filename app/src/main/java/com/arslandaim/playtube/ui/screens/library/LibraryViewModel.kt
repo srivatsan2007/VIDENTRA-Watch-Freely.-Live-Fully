@@ -81,6 +81,12 @@ class LibraryViewModel @Inject constructor(
         .map { it.toSet() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
+    val watchLaterPlaylist: StateFlow<com.arslandaim.playtube.data.local.LocalPlaylistEntity?> = libraryRepository.getWatchLaterPlaylist()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val watchLaterVideos: StateFlow<List<com.arslandaim.playtube.data.local.LocalPlaylistVideoEntity>> = libraryRepository.getWatchLaterVideos()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private val _subscriptionSearchQuery = MutableStateFlow("")
     val subscriptionSearchQuery: StateFlow<String> = _subscriptionSearchQuery.asStateFlow()
 
@@ -210,6 +216,23 @@ class LibraryViewModel @Inject constructor(
     fun deleteLocalPlaylist(playlist: com.arslandaim.playtube.data.local.LocalPlaylistEntity) {
         viewModelScope.launch {
             libraryRepository.deleteLocalPlaylist(playlist)
+        }
+    }
+
+    fun toggleWatchLater(video: com.arslandaim.playtube.domain.model.VideoItem) {
+        viewModelScope.launch {
+            val added = libraryRepository.toggleWatchLater(video)
+            _snackbarMessage.emit(
+                if (added) "Saved to Watch Later" else "Removed from Watch Later"
+            )
+        }
+    }
+
+    fun removeFromWatchLater(videoId: String) {
+        viewModelScope.launch {
+            val playlist = libraryRepository.getOrCreateWatchLaterPlaylist()
+            libraryRepository.removeVideoFromLocalPlaylist(playlist.id, videoId)
+            _snackbarMessage.emit("Removed from Watch Later")
         }
     }
 }

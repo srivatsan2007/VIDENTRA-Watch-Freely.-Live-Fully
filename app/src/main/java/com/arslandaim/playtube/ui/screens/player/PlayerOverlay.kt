@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.media3.common.util.UnstableApi
 import com.arslandaim.playtube.domain.model.VideoItem
+import com.arslandaim.playtube.ui.navigation.Destination
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.math.roundToInt
 
@@ -211,7 +212,11 @@ fun PlayerOverlay(
                     onBack = safeMinimize,
                     onVideoClick = onVideoClick,
                     onChannelClick = onChannelClick,
-                    onAddToPlaylistClick = onAddToPlaylistClick
+                    onAddToPlaylistClick = onAddToPlaylistClick,
+                    onNavigateToDownloads = {
+                        safeMinimize()
+                        navController?.navigate(Destination.Downloads) { launchSingleTop = true }
+                    }
                 )
             }
         } else {

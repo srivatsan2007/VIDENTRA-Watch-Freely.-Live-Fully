@@ -75,6 +75,13 @@ interface LibraryRepository {
     fun getAllSavedVideoIds(): Flow<List<String>>
     fun getPlaylistsContainingVideo(videoId: String): Flow<List<Int>>
 
+    // Watch Later
+    fun getWatchLaterPlaylist(): Flow<com.arslandaim.playtube.data.local.LocalPlaylistEntity?>
+    suspend fun getOrCreateWatchLaterPlaylist(): com.arslandaim.playtube.data.local.LocalPlaylistEntity
+    fun getWatchLaterVideos(): Flow<List<com.arslandaim.playtube.data.local.LocalPlaylistVideoEntity>>
+    fun isWatchLater(videoId: String): Flow<Boolean>
+    suspend fun toggleWatchLater(video: VideoItem): Boolean
+
     // Feed Cache
     fun getCachedFeed(key: String): Flow<com.arslandaim.playtube.data.local.FeedCacheEntity?>
     suspend fun updateCachedFeed(key: String, videos: List<VideoItem>)

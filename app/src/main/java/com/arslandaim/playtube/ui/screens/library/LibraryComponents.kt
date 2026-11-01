@@ -1423,3 +1423,189 @@ fun formatBytes(bytes: Long): String {
     val pre = "KMGTPE"[exp - 1]
     return String.format(java.util.Locale.US, "%.1f %sB", bytes / Math.pow(1024.0, exp.toDouble()), pre)
 }
+
+@Composable
+fun LibraryShortcutsRow(
+    downloadCount: Int,
+    watchLaterCount: Int,
+    historyCount: Int,
+    onSeeAllDownloads: () -> Unit,
+    onWatchLaterClick: () -> Unit,
+    onSeeAllHistory: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        LibraryShortcutCard(
+            icon = Icons.Default.Download,
+            title = "Downloads",
+            countText = if (downloadCount == 1) "1 video" else "$downloadCount videos",
+            onClick = onSeeAllDownloads,
+            modifier = Modifier.weight(1f)
+        )
+        LibraryShortcutCard(
+            icon = Icons.Default.WatchLater,
+            title = "Watch Later",
+            countText = if (watchLaterCount == 1) "1 video" else "$watchLaterCount videos",
+            onClick = onWatchLaterClick,
+            modifier = Modifier.weight(1f)
+        )
+        LibraryShortcutCard(
+            icon = Icons.Default.History,
+            title = "History",
+            countText = if (historyCount == 1) "1 item" else "$historyCount items",
+            onClick = onSeeAllHistory,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+fun LibraryShortcutCard(
+    icon: ImageVector,
+    title: String,
+    countText: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .clip(RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = countText,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernWatchLaterCard(
+    item: com.arslandaim.playtube.data.local.LocalPlaylistVideoEntity,
+    onClick: () -> Unit,
+    onRemove: () -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+    Column(
+        modifier = Modifier
+            .width(180.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(18.dp))
+                .border(
+                    width = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(18.dp)
+                )
+        ) {
+            ThumbnailImage(
+                videoId = item.videoId,
+                thumbnailUrl = item.thumbnailUrl,
+                quality = com.arslandaim.playtube.ui.components.ThumbnailQuality.High,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            if (item.duration > 0) {
+                Surface(
+                    color = Color.Black.copy(alpha = 0.75f),
+                    shape = RoundedCornerShape(6.dp),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(6.dp)
+                ) {
+                    Text(
+                        text = VideoUtils.formatDuration(item.duration),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(6.dp)
+            ) {
+                IconButton(
+                    onClick = { showMenu = true },
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                ) {
+                    Icon(Icons.Default.MoreVert, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                }
+                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                    DropdownMenuItem(
+                        text = { Text("Remove from Watch Later") },
+                        leadingIcon = { Icon(Icons.Default.Delete, null) },
+                        onClick = {
+                            showMenu = false
+                            onRemove()
+                        }
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = item.title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Text(
+            text = item.uploaderName,
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+

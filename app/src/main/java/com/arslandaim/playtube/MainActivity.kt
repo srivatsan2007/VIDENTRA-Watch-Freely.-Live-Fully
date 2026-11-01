@@ -59,6 +59,7 @@ import com.arslandaim.playtube.domain.model.VideoItem
 import com.arslandaim.playtube.services.PlaybackService
 import com.arslandaim.playtube.ui.components.GlassSurface
 import com.arslandaim.playtube.ui.components.WelcomeDialog
+import com.arslandaim.playtube.ui.components.AppUpdateDialog
 import com.arslandaim.playtube.ui.components.DeveloperBirthdayDialog
 import com.arslandaim.playtube.ui.components.SignInRequiredDialog
 import com.arslandaim.playtube.ui.components.YouTubeAuthSheet
@@ -458,6 +459,25 @@ class MainActivity : AppCompatActivity() {
                 if (showWelcomeDialog) {
                     WelcomeDialog(
                         onContinue = { mainViewModel.dismissWelcomeDialog() }
+                    )
+                }
+
+                // Global App Update Dialog
+                val updateInfo by updateViewModel.updateInfo.collectAsStateWithLifecycle()
+                val isUpdateDismissed by mainViewModel.isUpdateDialogDismissed.collectAsStateWithLifecycle()
+                if (updateInfo.hasUpdate && !isUpdateDismissed) {
+                    AppUpdateDialog(
+                        updateInfo = updateInfo,
+                        onUpdateClick = {
+                            val url = updateInfo.portfolioUrl.ifBlank { updateInfo.updateUrl }
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                startActivity(intent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        },
+                        onDismiss = { mainViewModel.dismissUpdateDialog() }
                     )
                 }
 

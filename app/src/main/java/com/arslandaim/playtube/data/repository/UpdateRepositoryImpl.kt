@@ -38,11 +38,17 @@ class UpdateRepositoryImpl @Inject constructor(
                 hasUpdate = hasUpdate,
                 latestVersion = latestVersion,
                 releaseNotes = response.body,
-                updateUrl = response.htmlUrl.ifEmpty { "https://github.com/srivatsan2007/VIDENTRA---Watch-Freely.-Live-Fully/releases" }
+                updateUrl = response.htmlUrl.ifEmpty { "https://github.com/srivatsan2007/VIDENTRA---Watch-Freely.-Live-Fully/releases" },
+                portfolioUrl = DEFAULT_PORTFOLIO_URL
             )
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    companion object {
+        // Portfolio link placeholder - update with user portfolio URL when provided
+        const val DEFAULT_PORTFOLIO_URL = "https://github.com/srivatsan2007"
     }
 
     private fun isVersionNewer(current: String, latest: String): Boolean {

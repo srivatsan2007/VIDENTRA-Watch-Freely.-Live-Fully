@@ -16,5 +16,6 @@ data class UpdateInfo(
     val hasUpdate: Boolean = false,
     val latestVersion: String = "",
     val releaseNotes: String = "",
-    val updateUrl: String = ""
+    val updateUrl: String = "",
+    val portfolioUrl: String = "https://github.com/srivatsan2007"
 )

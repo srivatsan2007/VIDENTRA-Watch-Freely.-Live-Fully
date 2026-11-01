@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.WatchLater
+import androidx.compose.material.icons.outlined.WatchLater
 import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.*
@@ -77,6 +79,7 @@ fun UnifiedMetadataHub(
     isSubscribed: Boolean,
     isFavorite: Boolean,
     isSaved: Boolean,
+    isWatchLater: Boolean = false,
     isDownloaded: Boolean,
     repeatMode: RepeatMode,
     comments: List<CommentItem>,
@@ -84,6 +87,7 @@ fun UnifiedMetadataHub(
     onToggleSubscription: () -> Unit,
     onToggleFavorite: () -> Unit,
     onSaveClick: () -> Unit,
+    onToggleWatchLater: () -> Unit = {},
     onDownloadClick: () -> Unit,
     onShareClick: () -> Unit,
     onRepeatClick: () -> Unit,
@@ -122,10 +126,12 @@ fun UnifiedMetadataHub(
         PlayerActionRow(
             isFavorite = isFavorite,
             isSaved = isSaved,
+            isWatchLater = isWatchLater,
             isDownloaded = isDownloaded,
             repeatMode = repeatMode,
             onToggleFavorite = onToggleFavorite,
             onSaveClick = onSaveClick,
+            onToggleWatchLater = onToggleWatchLater,
             onDownloadClick = onDownloadClick,
             onShareClick = onShareClick,
             onRepeatClick = onRepeatClick
@@ -383,10 +389,12 @@ fun ChannelInfoSection(
 fun PlayerActionRow(
     isFavorite: Boolean,
     isSaved: Boolean,
+    isWatchLater: Boolean = false,
     isDownloaded: Boolean,
     repeatMode: RepeatMode,
     onToggleFavorite: () -> Unit,
     onSaveClick: () -> Unit,
+    onToggleWatchLater: () -> Unit = {},
     onDownloadClick: () -> Unit,
     onShareClick: () -> Unit,
     onRepeatClick: () -> Unit
@@ -421,6 +429,13 @@ fun PlayerActionRow(
             label = if (isSaved) stringResource(R.string.saved) else stringResource(R.string.save),
             active = isSaved,
             onClick = onSaveClick
+        )
+
+        PlayerActionPill(
+            icon = if (isWatchLater) Icons.Default.WatchLater else Icons.Outlined.WatchLater,
+            label = if (isWatchLater) "Saved" else "Watch Later",
+            active = isWatchLater,
+            onClick = onToggleWatchLater
         )
 
         PlayerActionPill(
