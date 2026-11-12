@@ -2,44 +2,51 @@
  * PlayTube Project Original (2026)
  * arslandaim-hub (GitHub.com/arslandaim-hub)
  * Licenced Under GPL-3.0+
-*/
+ */
 package com.arslandaim.playtube.data.network
 
+import com.arslandaim.playtube.data.local.PreferencesManager
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PoTokenProvider @Inject constructor() {
+class PoTokenProvider @Inject constructor(
+    private val preferencesManager: PreferencesManager
+) {
     private val tokenCache = mutableMapOf<String, String>()
-    private var visitorData: String? = null
 
     /**
-     * Returns a stable VisitorData ID for the session.
+     * Returns the genuine YouTube VisitorData token if available.
+     * Never returns fake dummy strings (e.g. "visitor_data_...") which trigger Google 403 Forbidden.
      */
-    fun getVisitorData(): String {
-        if (visitorData == null) {
-            visitorData = "visitor_data_${System.currentTimeMillis()}"
+    fun getVisitorData(): String? {
+        return try {
+            val stored = runBlocking { preferencesManager.youtubeVisitorData.first() }
+            stored?.takeIf { it.isNotBlank() && !it.startsWith("visitor_data_") }
+        } catch (e: Exception) {
+            null
         }
-        return visitorData!!
     }
 
     /**
-     * Generates a Proof of Origin (PoToken) to legitimize streaming sessions.
-     * Uses a cached token for the same sessionId to ensure session stability.
+     * Returns a genuine Proof of Origin (PoToken) if available.
+     * Never returns synthetic dummy tokens like "po_token_..." which cause googlevideo.com to reject requests with 403.
      */
-    fun generatePoToken(sessionId: String? = null): String {
+    fun generatePoToken(sessionId: String? = null): String? {
         if (sessionId != null) {
-            tokenCache[sessionId]?.let { return it }
-        }
-        
-        val newToken = "po_token_${System.currentTimeMillis()}"
-        if (sessionId != null) {
-            // Keep cache small (last 5 sessions)
-            if (tokenCache.size >= 5) {
-                tokenCache.keys.firstOrNull()?.let { tokenCache.remove(it) }
+            val cached = tokenCache[sessionId]
+            if (cached != null && !cached.startsWith("po_token_")) {
+                return cached
             }
-            tokenCache[sessionId] = newToken
         }
-        return newToken
+        return null
+    }
+
+    fun setGenuinePoToken(sessionId: String, token: String) {
+        if (token.isNotBlank() && !token.startsWith("po_token_")) {
+            tokenCache[sessionId] = token
+        }
     }
 }

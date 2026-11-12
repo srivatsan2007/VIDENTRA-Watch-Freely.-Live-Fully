@@ -74,11 +74,14 @@ object NetworkModule {
                 val requestBuilder = chain.request().newBuilder()
                     .header("User-Agent", Constants.DEFAULT_USER_AGENT)
                 
-                // Phase 3: PoToken Integration for streaming requests
+                // Phase 3: PoToken Integration for streaming requests (only attach if genuine)
                 if (chain.request().url.host.contains("googlevideo.com")) {
                     val videoId = chain.request().url.queryParameter("id") 
                         ?: chain.request().url.queryParameter("v")
-                    requestBuilder.header("X-Goog-Po-Token", poTokenProvider.generatePoToken(videoId))
+                    val poToken = poTokenProvider.generatePoToken(videoId)
+                    if (!poToken.isNullOrBlank() && !poToken.startsWith("po_token_") && !poToken.startsWith("flow_")) {
+                        requestBuilder.header("X-Goog-Po-Token", poToken)
+                    }
                 }
 
                 chain.proceed(requestBuilder.build())

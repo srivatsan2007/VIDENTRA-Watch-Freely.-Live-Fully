@@ -45,9 +45,9 @@ class YouTubeHttpDataSource(
             .url(dataSpec.uri.toString())
             .header("User-Agent", userAgent)
 
-        // Attach PoToken and VisitorData
+        // Attach PoToken and VisitorData if genuine
         val visitorData = poTokenProvider.getVisitorData()
-        if (visitorData.isNotBlank()) {
+        if (!visitorData.isNullOrBlank()) {
             requestBuilder.header("X-Goog-Visitor-Id", visitorData)
         }
 
