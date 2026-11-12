@@ -12,7 +12,6 @@ object VideoUtils {
         
         val id = when {
             trimmed.contains("v=") -> trimmed.substringAfter("v=").substringBefore("&")
-            trimmed.contains("/shorts/") -> trimmed.substringAfter("/shorts/").substringBefore("?").substringBefore("/")
             trimmed.contains("/embed/") -> trimmed.substringAfter("/embed/").substringBefore("?").substringBefore("/")
             trimmed.contains("/v/") -> trimmed.substringAfter("/v/").substringBefore("?").substringBefore("/")
             trimmed.contains("youtu.be/") -> trimmed.substringAfter("youtu.be/").substringBefore("?").substringBefore("/")

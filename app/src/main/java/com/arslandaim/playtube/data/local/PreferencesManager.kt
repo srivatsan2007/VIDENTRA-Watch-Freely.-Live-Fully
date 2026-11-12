@@ -176,6 +176,14 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
             preferences[YOUTUBE_AUTH_COOKIES]
         }
 
+    open val youtubeVisitorData: Flow<String?> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            preferences[YOUTUBE_VISITOR_DATA]
+        }
+
     open val isRecommendationsPaused: Flow<Boolean> = dataStore.data
         .catch { exception ->
             if (exception is IOException) {
@@ -306,6 +314,18 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
             preferences[LAST_BIRTHDAY_CELEBRATION_YEAR] ?: 0
         }
 
+    fun getLastCelebrationYear(celebrationId: String): Flow<Int> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences())
+            else throw exception
+        }.map { preferences ->
+            if (celebrationId == "developer_birthday") {
+                preferences[LAST_BIRTHDAY_CELEBRATION_YEAR] ?: 0
+            } else {
+                preferences[intPreferencesKey("last_celebration_year_$celebrationId")] ?: 0
+            }
+        }
+
     open val lastPlayedVideoId: Flow<String?> = dataStore.data.map { it[LAST_PLAYED_VIDEO_ID] }
     open val lastPlayedPosition: Flow<Long> = dataStore.data.map { it[LAST_PLAYED_POSITION] ?: 0L }
     open val lastPlayedIsLocal: Flow<Boolean> = dataStore.data.map { it[LAST_PLAYED_IS_LOCAL] ?: false }
@@ -382,7 +402,8 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
         cookies: String,
         userName: String? = null,
         userEmail: String? = null,
-        avatarUrl: String? = null
+        avatarUrl: String? = null,
+        visitorData: String? = null
     ) {
         dataStore.edit { preferences ->
             preferences[IS_YOUTUBE_LOGGED_IN] = true
@@ -390,6 +411,7 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
             if (userName != null) preferences[YOUTUBE_USER_NAME] = userName
             if (userEmail != null) preferences[YOUTUBE_USER_EMAIL] = userEmail
             if (avatarUrl != null) preferences[YOUTUBE_USER_AVATAR] = avatarUrl
+            if (visitorData != null) preferences[YOUTUBE_VISITOR_DATA] = visitorData
         }
     }
 
@@ -400,6 +422,7 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
             preferences.remove(YOUTUBE_USER_NAME)
             preferences.remove(YOUTUBE_USER_EMAIL)
             preferences.remove(YOUTUBE_USER_AVATAR)
+            preferences.remove(YOUTUBE_VISITOR_DATA)
         }
     }
 
@@ -495,6 +518,15 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
         }
     }
 
+    suspend fun setLastCelebrationYear(celebrationId: String, year: Int) {
+        dataStore.edit { preferences ->
+            preferences[intPreferencesKey("last_celebration_year_$celebrationId")] = year
+            if (celebrationId == "developer_birthday") {
+                preferences[LAST_BIRTHDAY_CELEBRATION_YEAR] = year
+            }
+        }
+    }
+
     suspend fun setLastPlayedSession(videoId: String, position: Long, isLocal: Boolean) {
         dataStore.edit { preferences ->
             preferences[LAST_PLAYED_VIDEO_ID] = videoId
@@ -546,6 +578,7 @@ open class PreferencesManager @Inject constructor(@ApplicationContext context: C
         val YOUTUBE_USER_EMAIL = stringPreferencesKey("youtube_user_email")
         val YOUTUBE_USER_AVATAR = stringPreferencesKey("youtube_user_avatar")
         val YOUTUBE_AUTH_COOKIES = stringPreferencesKey("youtube_auth_cookies")
+        val YOUTUBE_VISITOR_DATA = stringPreferencesKey("youtube_visitor_data")
         val RECOMMENDATIONS_PAUSED = booleanPreferencesKey("recommendations_paused")
         val AUTOPLAY_ENABLED = booleanPreferencesKey("autoplay_enabled")
         val INCOGNITO_MODE = booleanPreferencesKey("incognito_mode")

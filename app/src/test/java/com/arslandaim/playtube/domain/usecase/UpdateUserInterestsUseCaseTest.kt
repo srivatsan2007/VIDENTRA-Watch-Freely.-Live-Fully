@@ -118,5 +118,12 @@ class UpdateUserInterestsUseCaseTest {
         override fun getPlaylistsContainingVideo(videoId: String): Flow<List<Int>> = flowOf(emptyList())
         override fun getCachedFeed(key: String): Flow<FeedCacheEntity?> = flowOf(null)
         override suspend fun updateCachedFeed(key: String, videos: List<com.arslandaim.playtube.domain.model.VideoItem>) {}
+
+        override fun getWatchLaterPlaylist(): Flow<LocalPlaylistEntity?> = flowOf(null)
+        override suspend fun getOrCreateWatchLaterPlaylist(): LocalPlaylistEntity =
+            throw UnsupportedOperationException("Not needed in this test")
+        override fun getWatchLaterVideos(): Flow<List<LocalPlaylistVideoEntity>> = flowOf(emptyList())
+        override fun isWatchLater(videoId: String): Flow<Boolean> = flowOf(false)
+        override suspend fun toggleWatchLater(video: com.arslandaim.playtube.domain.model.VideoItem): Boolean = false
     }
 }

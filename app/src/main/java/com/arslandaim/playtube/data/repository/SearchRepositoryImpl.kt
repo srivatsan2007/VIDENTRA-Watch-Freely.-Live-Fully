@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import org.schabi.newpipe.extractor.Page
 import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
+import com.arslandaim.playtube.utils.isShortVideo
 import org.schabi.newpipe.extractor.channel.ChannelInfoItem
 import org.schabi.newpipe.extractor.playlist.PlaylistInfoItem
 import javax.inject.Inject
@@ -72,7 +73,7 @@ class SearchRepositoryImpl @Inject constructor(
                 val page = extractor.initialPage
                 val items = page.items.mapNotNull { item ->
                     when (item) {
-                        is StreamInfoItem -> SearchItem.Video(mapToVideoItem(item))
+                        is StreamInfoItem -> if (item.isShortVideo()) null else SearchItem.Video(mapToVideoItem(item))
                         is ChannelInfoItem -> SearchItem.Channel(
                             id = item.url, // Usually full URL in NewPipe
                             name = item.name ?: "Unknown Channel",
@@ -143,7 +144,7 @@ class SearchRepositoryImpl @Inject constructor(
                 
                 val items = nextPage.items.mapNotNull { item ->
                     when (item) {
-                        is StreamInfoItem -> SearchItem.Video(mapToVideoItem(item))
+                        is StreamInfoItem -> if (item.isShortVideo()) null else SearchItem.Video(mapToVideoItem(item))
                         is ChannelInfoItem -> SearchItem.Channel(
                             id = item.url,
                             name = item.name ?: "Unknown Channel",

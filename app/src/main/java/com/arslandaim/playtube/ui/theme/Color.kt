@@ -11,18 +11,20 @@ import androidx.compose.ui.graphics.Color
 val VidentraMint = Color(0xFFA8E6A3)
 val VidentraSage = Color(0xFFDEF1C4)
 val VidentraGreen = Color(0xFF5BA866)
+val VidentraDeepGreen = Color(0xFF1E4D2B)
+val VidentraDarkContainer = Color(0xFF24402A)
 val YoutubeRed = Color(0xFFFF0000)
 val DarkRed = Color(0xFFB90000)
 
 // Light Theme Colors
-val LightBackground = Color(0xFFFFFFFF)
-val LightSurface = Color(0xFFF9F9F9)
+val LightBackground = Color(0xFFF6FAF3)
+val LightSurface = Color(0xFFE9F2E4)
 val LightOnSurface = Color(0xFF0F0F0F)
 val LightOnSurfaceVariant = Color(0xFF606060)
 
 // Dark Theme Colors (Deep Dark/OLED)
-val DarkBackground = Color(0xFF0F0F0F)
-val DarkSurface = Color(0xFF1E1E1E)
+val DarkBackground = Color(0xFF0D120F)
+val DarkSurface = Color(0xFF1A221D)
 val DarkOnSurface = Color(0xFFFFFFFF)
 val DarkOnSurfaceVariant = Color(0xFFAAAAAA)
 

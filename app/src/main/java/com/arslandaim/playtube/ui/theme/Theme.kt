@@ -22,13 +22,17 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = YoutubeRed,
-    secondary = DarkRed,
+    primary = VidentraMint,
+    primaryContainer = VidentraDarkContainer,
+    onPrimaryContainer = VidentraSage,
+    secondaryContainer = VidentraDarkContainer,
+    onSecondaryContainer = VidentraSage,
+    secondary = VidentraGreen,
     tertiary = DarkOnSurfaceVariant,
     background = DarkBackground,
     surface = DarkBackground,
-    onPrimary = DarkOnSurface,
-    onSecondary = DarkOnSurface,
+    onPrimary = Color(0xFF0B2A12),
+    onSecondary = Color.White,
     onTertiary = DarkOnSurface,
     onBackground = DarkOnSurface,
     onSurface = DarkOnSurface,
@@ -37,9 +41,13 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = YoutubeRed,
+    primary = VidentraGreen,
     onPrimary = Color.White,
-    secondary = DarkRed,
+    primaryContainer = VidentraSage,
+    onPrimaryContainer = VidentraDeepGreen,
+    secondaryContainer = VidentraSage,
+    onSecondaryContainer = VidentraDeepGreen,
+    secondary = VidentraDeepGreen,
     onSecondary = Color.White,
     tertiary = LightOnSurfaceVariant,
     onTertiary = Color.White,

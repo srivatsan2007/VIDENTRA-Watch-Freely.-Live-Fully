@@ -5,7 +5,10 @@
 */
 package com.arslandaim.playtube.data.network
 
+import com.arslandaim.playtube.data.local.PreferencesManager
 import com.arslandaim.playtube.utils.Constants
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.Request as OkHttpRequest
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -14,7 +17,42 @@ import org.schabi.newpipe.extractor.downloader.Request
 import org.schabi.newpipe.extractor.downloader.Response
 import java.io.IOException
 
-class YouTubeDownloader(private val client: OkHttpClient) : Downloader() {
+class YouTubeDownloader(
+    private val client: OkHttpClient,
+    private val preferencesManager: PreferencesManager? = null
+) : Downloader() {
+
+    @Volatile
+    private var cachedIsLoggedIn: Boolean = false
+    @Volatile
+    private var cachedAuthCookies: String? = null
+    @Volatile
+    private var cachedVisitorData: String? = null
+    @Volatile
+    private var lastAuthCheckTime: Long = 0L
+
+    private fun refreshAuthCache() {
+        val now = System.currentTimeMillis()
+        if (now - lastAuthCheckTime < 10000L && lastAuthCheckTime > 0) return
+
+        preferencesManager?.let { prefs ->
+            try {
+                runBlocking {
+                    cachedIsLoggedIn = prefs.isYouTubeLoggedIn.first()
+                    if (cachedIsLoggedIn) {
+                        cachedAuthCookies = prefs.youtubeAuthCookies.first()
+                        cachedVisitorData = prefs.youtubeVisitorData.first()
+                    } else {
+                        cachedAuthCookies = null
+                        cachedVisitorData = null
+                    }
+                }
+                lastAuthCheckTime = now
+            } catch (e: Exception) {
+                // Keep existing cache on transient error
+            }
+        }
+    }
 
     @Throws(IOException::class)
     override fun execute(request: Request): Response {
@@ -31,16 +69,32 @@ class YouTubeDownloader(private val client: OkHttpClient) : Downloader() {
 
         val mergedHeaders = headers.toMutableMap()
 
-        // Bypass YouTube Consent/GDPR redirection in Europe
-        // Merge with existing cookies if present
+        // Bypass YouTube Consent/GDPR redirection in Europe & attach authenticated session
         if (url.contains("youtube.com") || url.contains("googlevideo.com")) {
-            val existingCookies = mergedHeaders["Cookie"] ?: emptyList()
+            val existingCookies = (mergedHeaders["Cookie"] ?: emptyList()).toMutableList()
             if (existingCookies.none { it.contains("CONSENT=YES") }) {
-                val newCookies = existingCookies.toMutableList().apply { 
-                    add(Constants.YouTube.CONSENT_COOKIE) 
-                }
-                mergedHeaders["Cookie"] = newCookies
+                existingCookies.add(Constants.YouTube.CONSENT_COOKIE)
             }
+
+            refreshAuthCache()
+            if (cachedIsLoggedIn && !cachedAuthCookies.isNullOrBlank()) {
+                val cookies = cachedAuthCookies!!
+                existingCookies.add(cookies)
+
+                if (url.contains("youtube.com")) {
+                    val sapisid = YouTubeAuthHelper.extractSapisid(cookies)
+                    if (sapisid != null && !mergedHeaders.containsKey("Authorization")) {
+                        val authHeader = YouTubeAuthHelper.generateSapisidHash(sapisid, "https://www.youtube.com")
+                        mergedHeaders["Authorization"] = listOf(authHeader)
+                        mergedHeaders["X-Origin"] = listOf("https://www.youtube.com")
+                        mergedHeaders["Referer"] = listOf("https://www.youtube.com/")
+                    }
+                    if (!cachedVisitorData.isNullOrBlank() && !mergedHeaders.containsKey("X-Goog-Visitor-Id")) {
+                        mergedHeaders["X-Goog-Visitor-Id"] = listOf(cachedVisitorData!!)
+                    }
+                }
+            }
+            mergedHeaders["Cookie"] = existingCookies
         }
 
         mergedHeaders.forEach { (key, values) ->

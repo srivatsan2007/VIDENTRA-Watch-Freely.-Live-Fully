@@ -7,8 +7,11 @@ package com.arslandaim.playtube.ui.components
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -28,26 +31,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.arslandaim.playtube.VidentraApp
+import com.arslandaim.playtube.data.network.YouTubeAuthHelper
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import org.json.JSONObject
 
 /**
  * Sandboxed Google / YouTube Sign-In Dialog.
- * Directs user to official Google accounts sign-in, securely captures session cookies,
- * user profile information (name, email, avatar), and notifies Videntra when authentication is complete.
+ * Uses official Google ServiceLogin, captures session cookies, visitor token (VISITOR_DATA),
+ * and validates account info via YouTube's official InnerTube API.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun YouTubeAuthSheet(
     onDismiss: () -> Unit,
-    onAuthSuccess: (cookies: String, userName: String?, email: String?, avatarUrl: String?) -> Unit
+    onAuthSuccess: (cookies: String, userName: String?, email: String?, avatarUrl: String?, visitorData: String?) -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val okHttpClient = remember {
+        (context.applicationContext as? VidentraApp)?.okHttpClient ?: OkHttpClient()
+    }
+
     var isLoading by remember { mutableStateOf(true) }
     var webProgress by remember { mutableFloatStateOf(0f) }
     var currentWebUrl by remember { mutableStateOf("") }
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
     var isAuthHandled by remember { mutableStateOf(false) }
+    var capturedVisitorData by remember { mutableStateOf<String?>(null) }
 
     fun getMergedCookies(url: String?): String {
         val cookieManager = CookieManager.getInstance()
@@ -55,6 +68,7 @@ fun YouTubeAuthSheet(
         val urlsToProbe = listOfNotNull(
             "https://www.youtube.com",
             "https://m.youtube.com",
+            "https://music.youtube.com",
             "https://accounts.google.com",
             "https://myaccount.google.com",
             "https://www.google.com",
@@ -80,7 +94,8 @@ fun YouTubeAuthSheet(
 
     fun isSessionAuthenticated(cookies: String): Boolean {
         return cookies.contains("LOGIN_INFO") ||
-                (cookies.contains("SAPISID") && (cookies.contains("SSID") || cookies.contains("SID") || cookies.contains("APISID"))) ||
+                cookies.contains("SAPISID") ||
+                cookies.contains("__Secure-3PAPISID") ||
                 cookies.contains("__Secure-1PSID") ||
                 cookies.contains("__Secure-3PSID") ||
                 (cookies.contains("SID=") && cookies.contains("HSID="))
@@ -91,97 +106,118 @@ fun YouTubeAuthSheet(
         if (isSessionAuthenticated(cookies)) {
             isAuthHandled = true
 
-            val jsExtractor = """
-                (function() {
-                  try {
-                    var name = '';
-                    var email = '';
-                    var avatar = '';
+            coroutineScope.launch {
+                // Step 1: Validate account & get user info via official InnerTube endpoint
+                val profile = YouTubeAuthHelper.fetchUserProfile(
+                    okHttpClient = okHttpClient,
+                    cookieString = cookies,
+                    visitorData = capturedVisitorData
+                )
 
-                    var ytBtn = document.querySelector('#avatar-btn, ytm-profile-icon');
-                    if (ytBtn) {
-                      var label = ytBtn.getAttribute('aria-label') || '';
-                      if (label) {
-                        var match = label.match(/Google Account:\s*(.*?)(?:\s*\((.*?)\)|$)/i);
-                        if (match) {
-                          name = match[1] ? match[1].trim() : '';
-                          if (match[2] && match[2].indexOf('@') !== -1) email = match[2].trim();
-                        } else {
-                          name = label.replace(/Google Account:/i, '').trim();
-                        }
-                      }
-                      var img = ytBtn.querySelector('img');
-                      if (img && img.src) avatar = img.src;
-                    }
-
-                    if (!name || !email) {
-                      var gBtn = document.querySelector('a[aria-label*="Google Account"], button[aria-label*="Google Account"], a[aria-label*="@"], button[aria-label*="@"]');
-                      if (gBtn) {
-                        var label = gBtn.getAttribute('aria-label') || '';
-                        var match = label.match(/(?:Google Account:\s*)?(.*?)(?:\s*[\n(]([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})[\n)]|$)/);
-                        if (match) {
-                          if (!name) name = match[1] ? match[1].trim() : '';
-                          if (!email && match[2]) email = match[2].trim();
-                        }
-                        var img = gBtn.querySelector('img');
-                        if (!avatar && img && img.src) avatar = img.src;
-                      }
-                    }
-
-                    if (!email) {
-                      var emailEl = document.querySelector('[data-email]');
-                      if (emailEl) email = emailEl.getAttribute('data-email') || '';
-                    }
-                    if (!email) {
-                      var idEl = document.querySelector('[data-identifier]');
-                      var idVal = idEl ? idEl.getAttribute('data-identifier') : '';
-                      if (idVal && idVal.indexOf('@') !== -1) email = idVal;
-                    }
-
-                    if (!avatar) {
-                      var pImg = document.querySelector('img[src*="googleusercontent.com"], img[src*="yt3.ggpht.com"]');
-                      if (pImg && pImg.src && pImg.src.indexOf('default_user') === -1) avatar = pImg.src;
-                    }
-
-                    if (name && name.indexOf('\n') !== -1) name = name.split('\n')[0].trim();
-                    if (email && email.indexOf('\n') !== -1) email = email.split('\n')[0].trim();
-
-                    return JSON.stringify({ name: name, email: email, avatar: avatar });
-                  } catch(e) {
-                    return JSON.stringify({ name: '', email: '', avatar: '' });
-                  }
-                })()
-            """.trimIndent()
-
-            val finishWithData = { extractedName: String?, extractedEmail: String?, extractedAvatar: String? ->
-                val finalName = extractedName?.takeIf { it.isNotBlank() }
-                    ?: extractedEmail?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
-                    ?: "Google User"
-                val finalEmail = extractedEmail?.takeIf { it.isNotBlank() }
-                val finalAvatar = extractedAvatar?.takeIf { it.isNotBlank() }
-                Toast.makeText(context, "Welcome, $finalName!", Toast.LENGTH_SHORT).show()
-                onAuthSuccess(cookies, finalName, finalEmail, finalAvatar)
-            }
-
-            val webView = webViewInstance
-            if (webView != null) {
-                webView.evaluateJavascript(jsExtractor) { rawResult ->
-                    try {
-                        var jsonStr = rawResult ?: ""
-                        if (jsonStr.startsWith("\"") && jsonStr.endsWith("\"")) {
-                            jsonStr = JSONObject(mapOf("wrapped" to jsonStr)).getString("wrapped")
-                        }
-                        val jsonObj = JSONObject(jsonStr)
-                        val name = jsonObj.optString("name").ifBlank { null }
-                        val email = jsonObj.optString("email").ifBlank { null }
-                        val avatar = jsonObj.optString("avatar").ifBlank { null }
-                        finishWithData(name, email, avatar)
-                    } catch (e: Exception) {
-                        finishWithData(null, null, null)
-                    }
+                if (profile != null && (!profile.name.isNullOrBlank() || !profile.email.isNullOrBlank())) {
+                    val finalName = profile.name
+                        ?: profile.email?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
+                        ?: "YouTube User"
+                    Toast.makeText(context, "Welcome, $finalName!", Toast.LENGTH_SHORT).show()
+                    onAuthSuccess(cookies, finalName, profile.email, profile.avatarUrl, capturedVisitorData)
+                    return@launch
                 }
-            } else {
-                finishWithData(null, null, null)
+
+                // Step 2: Fallback to DOM inspection if network extraction was unavailable
+                val jsExtractor = """
+                    (function() {
+                      try {
+                        var name = '';
+                        var email = '';
+                        var avatar = '';
+
+                        var ytBtn = document.querySelector('#avatar-btn, ytm-profile-icon');
+                        if (ytBtn) {
+                          var label = ytBtn.getAttribute('aria-label') || '';
+                          if (label) {
+                            var match = label.match(/Google Account:\s*(.*?)(?:\s*\((.*?)\)|$)/i);
+                            if (match) {
+                              name = match[1] ? match[1].trim() : '';
+                              if (match[2] && match[2].indexOf('@') !== -1) email = match[2].trim();
+                            } else {
+                              name = label.replace(/Google Account:/i, '').trim();
+                            }
+                          }
+                          var img = ytBtn.querySelector('img');
+                          if (img && img.src) avatar = img.src;
+                        }
+
+                        if (!name || !email) {
+                          var gBtn = document.querySelector('a[aria-label*="Google Account"], button[aria-label*="Google Account"], a[aria-label*="@"], button[aria-label*="@"]');
+                          if (gBtn) {
+                            var label = gBtn.getAttribute('aria-label') || '';
+                            var match = label.match(/(?:Google Account:\s*)?(.*?)(?:\s*[\n(]([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})[\n)]|$)/);
+                            if (match) {
+                              if (!name) name = match[1] ? match[1].trim() : '';
+                              if (!email && match[2]) email = match[2].trim();
+                            }
+                            var img = gBtn.querySelector('img');
+                            if (!avatar && img && img.src) avatar = img.src;
+                          }
+                        }
+
+                        if (!email) {
+                          var emailEl = document.querySelector('[data-email]');
+                          if (emailEl) email = emailEl.getAttribute('data-email') || '';
+                        }
+                        if (!email) {
+                          var idEl = document.querySelector('[data-identifier]');
+                          var idVal = idEl ? idEl.getAttribute('data-identifier') : '';
+                          if (idVal && idVal.indexOf('@') !== -1) email = idVal;
+                        }
+
+                        if (!avatar) {
+                          var pImg = document.querySelector('img[src*="googleusercontent.com"], img[src*="yt3.ggpht.com"]');
+                          if (pImg && pImg.src && pImg.src.indexOf('default_user') === -1) avatar = pImg.src;
+                        }
+
+                        if (name && name.indexOf('\n') !== -1) name = name.split('\n')[0].trim();
+                        if (email && email.indexOf('\n') !== -1) email = email.split('\n')[0].trim();
+
+                        return JSON.stringify({ name: name, email: email, avatar: avatar });
+                      } catch(e) {
+                        return JSON.stringify({ name: '', email: '', avatar: '' });
+                      }
+                    })()
+                """.trimIndent()
+
+                val finishWithData = { extractedName: String?, extractedEmail: String?, extractedAvatar: String? ->
+                    val finalName = extractedName?.takeIf { it.isNotBlank() }
+                        ?: extractedEmail?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
+                        ?: "YouTube User"
+                    val finalEmail = extractedEmail?.takeIf { it.isNotBlank() }
+                    val finalAvatar = extractedAvatar?.takeIf { it.isNotBlank() }?.let {
+                        if (it.startsWith("//")) "https:$it" else it
+                    }
+                    Toast.makeText(context, "Welcome, $finalName!", Toast.LENGTH_SHORT).show()
+                    onAuthSuccess(cookies, finalName, finalEmail, finalAvatar, capturedVisitorData)
+                }
+
+                val webView = webViewInstance
+                if (webView != null) {
+                    webView.evaluateJavascript(jsExtractor) { rawResult ->
+                        try {
+                            var jsonStr = rawResult ?: ""
+                            if (jsonStr.startsWith("\"") && jsonStr.endsWith("\"")) {
+                                jsonStr = JSONObject(mapOf("wrapped" to jsonStr)).getString("wrapped")
+                            }
+                            val jsonObj = JSONObject(jsonStr)
+                            val name = jsonObj.optString("name").ifBlank { null }
+                            val email = jsonObj.optString("email").ifBlank { null }
+                            val avatar = jsonObj.optString("avatar").ifBlank { null }
+                            finishWithData(name, email, avatar)
+                        } catch (e: Exception) {
+                            finishWithData(null, null, null)
+                        }
+                    }
+                } else {
+                    finishWithData(null, null, null)
+                }
             }
         } else if (fallbackToDismiss) {
             onDismiss()
@@ -224,7 +260,7 @@ fun YouTubeAuthSheet(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Sign In with Google",
+                                text = "Sign In to YouTube",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -282,24 +318,38 @@ fun YouTubeAuthSheet(
                         WebView(ctx).apply {
                             webViewInstance = this
 
+                            // 1. Enable modern browser features needed by Google Auth
+                            settings.apply {
+                                javaScriptEnabled = true
+                                domStorageEnabled = true
+                                databaseEnabled = true
+                                setSupportMultipleWindows(true)
+                                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                                setSupportZoom(true)
+                                builtInZoomControls = true
+                                displayZoomControls = false
+
+                                // 2. CRITICAL: Mask the WebView signature in User-Agent
+                                val defaultUa = userAgentString ?: WebSettings.getDefaultUserAgent(ctx)
+                                userAgentString = defaultUa
+                                    .replace("; wv", "")
+                                    .replace(Regex("Version/\\d+\\.\\d+\\s*"), "")
+                            }
+
+                            // 3. Enable Third-Party Cookies (essential for Google -> YouTube redirection)
                             val cookieManager = CookieManager.getInstance()
                             cookieManager.setAcceptCookie(true)
                             cookieManager.setAcceptThirdPartyCookies(this, true)
 
-                            settings.apply {
-                                javaScriptEnabled = true
-                                domStorageEnabled = true
-                                setSupportZoom(true)
-                                builtInZoomControls = true
-                                displayZoomControls = false
-                                val defaultUa = userAgentString ?: ""
-                                val cleanUa = defaultUa.replace("; wv", "")
-                                userAgentString = if (cleanUa.contains("Chrome/")) {
-                                    cleanUa
-                                } else {
-                                    "Mozilla/5.0 (Linux; Android ${android.os.Build.VERSION.RELEASE}; ${android.os.Build.MODEL}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
+                            // 4. JavaScript Interface to grab YouTube's internal Visitor Data
+                            addJavascriptInterface(object {
+                                @JavascriptInterface
+                                fun onVisitorData(data: String?) {
+                                    if (!data.isNullOrEmpty() && data != "null") {
+                                        capturedVisitorData = data
+                                    }
                                 }
-                            }
+                            }, "AndroidBridge")
 
                             webChromeClient = object : WebChromeClient() {
                                 override fun onProgressChanged(view: WebView?, newProgress: Int) {
@@ -310,13 +360,14 @@ fun YouTubeAuthSheet(
                             }
 
                             webViewClient = object : WebViewClient() {
+                                private val ALLOWED_HOSTS = Regex(
+                                    """(^|\.)(google|youtube|gstatic|googleusercontent|googleapis|googlevideo)\.[a-z.]+$|^g\.co$""",
+                                    RegexOption.IGNORE_CASE
+                                )
+
                                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                                    val reqUrl = request?.url?.toString() ?: return false
-                                    // Keep all Google and YouTube authentication links within the WebView
-                                    if (reqUrl.contains("google.") || reqUrl.contains("youtube.") || reqUrl.contains("youtu.be")) {
-                                        return false
-                                    }
-                                    return false
+                                    val host = request?.url?.host?.lowercase().orEmpty()
+                                    return !ALLOWED_HOSTS.containsMatchIn(host)
                                 }
 
                                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
@@ -330,17 +381,39 @@ fun YouTubeAuthSheet(
                                     isLoading = false
                                     currentWebUrl = url ?: ""
 
+                                    // If on YouTube domain, extract VISITOR_DATA from runtime
+                                    if (url?.contains("youtube.com") == true) {
+                                        view?.loadUrl(
+                                            "javascript:(function(){" +
+                                            "  try {" +
+                                            "    var vd = (window.yt && window.yt.config_ && window.yt.config_.VISITOR_DATA) ? window.yt.config_.VISITOR_DATA :" +
+                                            "             (window.ytcfg && window.ytcfg.get ? window.ytcfg.get('VISITOR_DATA') : '');" +
+                                            "    if (window.AndroidBridge && vd) { window.AndroidBridge.onVisitorData(vd); }" +
+                                            "  } catch(e) {}" +
+                                            "})();"
+                                        )
+                                    }
+
                                     val merged = getMergedCookies(url)
-                                    // Check if cookies contain valid session identifiers
                                     if (isSessionAuthenticated(merged) && !isAuthHandled) {
                                         completeAuthIfPossible(merged)
                                     }
                                 }
+
+                                // Fallback for ISP / Carrier network resets on SetSID
+                                override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                                    super.onReceivedError(view, request, error)
+                                    val failingUrl = request?.url?.toString().orEmpty()
+                                    if (failingUrl.contains("SetSID", ignoreCase = true)) {
+                                        view?.postDelayed({
+                                            view.loadUrl("https://www.youtube.com")
+                                        }, 500)
+                                    }
+                                }
                             }
 
-                            // Start at official Google Sign-In with YouTube service
-                            val googleSignInUrl = "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fwww.youtube.com%2F"
-                            loadUrl(googleSignInUrl)
+                            // 5. Load the official Google ServiceLogin for YouTube
+                            loadUrl("https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fwww.youtube.com%2F")
                         }
                     },
                     update = {
@@ -363,4 +436,20 @@ fun YouTubeAuthSheet(
             }
         }
     }
+}
+
+/**
+ * Backward compatibility overload for callers who don't need visitorData callback directly.
+ */
+@Composable
+fun YouTubeAuthSheet(
+    onDismiss: () -> Unit,
+    onAuthSuccess: (cookies: String, userName: String?, email: String?, avatarUrl: String?) -> Unit
+) {
+    YouTubeAuthSheet(
+        onDismiss = onDismiss,
+        onAuthSuccess = { cookies, name, email, avatar, _ ->
+            onAuthSuccess(cookies, name, email, avatar)
+        }
+    )
 }

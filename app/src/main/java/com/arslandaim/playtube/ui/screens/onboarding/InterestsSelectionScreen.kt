@@ -44,6 +44,7 @@ fun InterestsSelectionScreen(
             "Education" to listOf("English", "Spanish", "Study tips", "College", "Tutorials", "Philosophy", "University", "Finance", "Economics", "Marketing", "Business", "History"),
             "Health" to listOf("Mental Health", "Meditation", "Self Improvement", "Productivity", "Motivation", "Sports", "Football", "Soccer", "Fitness", "Gym"),
             "Science & Nature" to listOf("Animals", "Astronomy", "Nature", "Climate", "Geology", "Engineering", "Inventions"),
+            "Tamil" to listOf("Tamil", "Tamil songs", "Tamil movies", "Tamil comedy", "Tamil news", "Tamil cooking", "Tamil tech", "Tamil devotional"),
             "News" to listOf("World News", "Tech news", "Sports News", "Entertainment News", "Current events", "Debates", "Politics News")
         )
     }

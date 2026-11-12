@@ -89,6 +89,7 @@ fun HomeScreen(
         savedVideoIds = savedVideoIds,
         snackbarMessage = viewModel.snackbarMessage,
         onRefresh = viewModel::refresh,
+        onCategorySelected = viewModel::selectCategory,
         onLoadMore = viewModel::loadNextTrendingPage,
         onFavoriteClick = viewModel::toggleFavorite,
         onNotInterestedClick = viewModel::markNotInterested,
@@ -206,7 +207,8 @@ private fun HomeContent(
     onBarsVisibilityChange: (Boolean) -> Unit,
     onVideoClick: (VideoItem) -> Unit,
     onChannelClick: (String) -> Unit,
-    onNavigateToDownloads: () -> Unit // New parameter
+    onNavigateToDownloads: () -> Unit, // New parameter
+    onCategorySelected: (String?) -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -345,17 +347,60 @@ private fun HomeContent(
             }
         }
 
-        // Header placeholder (could be used for categories if added later)
-        Spacer(
+        // Category chips (collapse together with the header while scrolling)
+        val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+        val categories = remember { listOf("Music", "Gaming", "Live", "News", "Podcasts", "Movies", "Sports", "Comedy", "Cooking", "Science") }
+        androidx.compose.foundation.lazy.LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
+                .offset { androidx.compose.ui.unit.IntOffset(0, headerOffsetPx.toInt()) }
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.96f))
                 .onGloballyPositioned { layoutCoordinates ->
                     val newHeight = layoutCoordinates.size.height.toFloat()
                     if (headerHeightPx != newHeight) {
                         headerHeightPx = newHeight
                     }
-                }
-        )
+                },
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item(key = "chip_all") {
+                FilterChip(
+                    selected = state.selectedCategory == null,
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onCategorySelected(null)
+                    },
+                    label = { Text("All") },
+                    shape = RoundedCornerShape(50),
+                    border = null,
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
+            }
+            items(categories, key = { "chip_$it" }) { category ->
+                FilterChip(
+                    selected = state.selectedCategory == category,
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onCategorySelected(category)
+                    },
+                    label = { Text(category) },
+                    shape = RoundedCornerShape(50),
+                    border = null,
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
+            }
+        }
 
         // Quick Action Dialogs
         when (val downloadDialogState = downloadState) {

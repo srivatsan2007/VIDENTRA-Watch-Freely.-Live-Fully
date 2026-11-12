@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.arslandaim.playtube.data.local.FavoriteEntity
 import com.arslandaim.playtube.data.local.SearchHistoryDao
+import com.arslandaim.playtube.domain.model.SearchItem
 import com.arslandaim.playtube.domain.model.StreamBundle
 import com.arslandaim.playtube.domain.model.VideoItem
 import com.arslandaim.playtube.domain.repository.LibraryRepository
@@ -40,7 +41,8 @@ class HomeViewModel @Inject constructor(
     private val videoRepository: VideoRepository,
     private val getRecommendationsUseCase: com.arslandaim.playtube.domain.usecase.GetRecommendationsUseCase,
     private val markNotInterestedUseCase: com.arslandaim.playtube.domain.usecase.MarkNotInterestedUseCase,
-    private val getTrendingVideosUseCase: com.arslandaim.playtube.domain.usecase.GetTrendingVideosUseCase
+    private val getTrendingVideosUseCase: com.arslandaim.playtube.domain.usecase.GetTrendingVideosUseCase,
+    private val searchRepository: SearchRepository
 ) : ViewModel() {
 
     private val _internalState = MutableStateFlow(HomeState())
@@ -71,7 +73,7 @@ class HomeViewModel @Inject constructor(
         // Phase 1: Load cached trending immediately
         viewModelScope.launch {
             libraryRepository.getCachedFeed("home_trending").collect { cache ->
-                if (cache != null && _internalState.value.trendingVideos.isEmpty()) {
+                if (cache != null && _internalState.value.trendingVideos.isEmpty() && _internalState.value.selectedCategory == null) {
                     _internalState.update { it.copy(trendingVideos = cache.videos, isTrendingLoading = false) }
                 }
             }
@@ -82,8 +84,12 @@ class HomeViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            fetchTrending(isRefresh = true)
-            _isRefreshing.value = false
+            try {
+                val category = _internalState.value.selectedCategory
+                if (category != null) fetchCategory(category) else fetchTrending(isRefresh = true)
+            } finally {
+                _isRefreshing.value = false
+            }
         }
     }
 
@@ -109,13 +115,27 @@ class HomeViewModel @Inject constructor(
             // This ensures the "Personalized" notification feels truly unique.
             val filteredTrending = trendingVideos.filter { tv -> recommendations.none { it.id == tv.id } }
 
-            val combinedVideos = if (recommendations.isNotEmpty()) {
+            val fetched = if (recommendations.isNotEmpty()) {
                 (recommendations + filteredTrending).distinctBy { it.id }
             } else {
                 trendingVideos
             }
 
-            _internalState.update { 
+            // Never wipe the feed with an empty result (network/extractor failure)
+            if (fetched.isEmpty()) {
+                if (isRefresh) _snackbarMessage.emit("Couldn't refresh right now. Try again.")
+                return
+            }
+
+            // On refresh, show videos the user hasn't just seen first
+            val previousIds = _internalState.value.trendingVideos.map { it.id }.toSet()
+            val combinedVideos = if (isRefresh && previousIds.isNotEmpty()) {
+                val (fresh, seen) = fetched.partition { it.id !in previousIds }
+                if (fresh.isEmpty()) _snackbarMessage.emit("No new videos right now")
+                fresh + seen
+            } else fetched
+
+            _internalState.update {
                 it.copy(
                     trendingVideos = combinedVideos,
                     nextTrendingPage = trendingResult?.nextPage,
@@ -131,7 +151,39 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun selectCategory(category: String?) {
+        if (_internalState.value.selectedCategory == category) return
+        _internalState.update { it.copy(selectedCategory = category) }
+        if (category == null) {
+            loadTrending()
+            return
+        }
+        trendingFetchJob?.cancel()
+        trendingFetchJob = viewModelScope.launch {
+            _internalState.update { it.copy(isTrendingLoading = true, error = null, trendingVideos = emptyList(), nextTrendingPage = null) }
+            fetchCategory(category)
+            _internalState.update { it.copy(isTrendingLoading = false) }
+        }
+    }
+
+    private suspend fun fetchCategory(category: String) {
+        try {
+            val items = searchRepository.search(category).items
+                .filterIsInstance<SearchItem.Video>()
+                .map { it.video }
+            // Ignore the result if the user already switched to another chip
+            if (_internalState.value.selectedCategory == category) {
+                _internalState.update { it.copy(trendingVideos = items, nextTrendingPage = null) }
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _internalState.update { it.copy(error = PlayTubeError.fromThrowable(e)) }
+        }
+    }
+
     fun loadNextTrendingPage() {
+        if (_internalState.value.selectedCategory != null) return
         val page = _internalState.value.nextTrendingPage
         if (_internalState.value.isLoadingMore) return
 
@@ -281,5 +333,6 @@ data class HomeState(
     val isTrendingLoading: Boolean = true,
     val isLoadingMore: Boolean = false,
     val isPersonalized: Boolean = false,
+    val selectedCategory: String? = null,
     val error: PlayTubeError? = null
 )

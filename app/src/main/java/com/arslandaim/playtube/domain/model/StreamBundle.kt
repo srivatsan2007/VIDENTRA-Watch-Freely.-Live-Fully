@@ -27,6 +27,8 @@ data class StreamBundle(
     val relatedVideos: List<VideoItem> = emptyList(),
     val nextRelatedVideosPage: Page? = null,
     val bestAudioStreamUrl: String? = null,
+    // Muxed (video+audio) stream used when the adaptive audio track is missing, so playback is never silent
+    val progressiveFallbackUrl: String? = null,
     val subtitles: List<SubtitleItem> = emptyList(),
     val extractedAt: Long = System.currentTimeMillis()
 ) {

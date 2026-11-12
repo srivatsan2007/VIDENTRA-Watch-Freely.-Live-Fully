@@ -14,6 +14,7 @@ import com.arslandaim.playtube.data.local.PreferencesManager
 import com.arslandaim.playtube.domain.repository.DownloadRepository
 import com.arslandaim.playtube.domain.repository.LibraryRepository
 import com.arslandaim.playtube.utils.LocaleUtils
+import com.arslandaim.playtube.data.network.YouTubeAuthHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,8 +33,51 @@ class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferencesManager: PreferencesManager,
     private val downloadRepository: DownloadRepository,
-    private val libraryRepository: LibraryRepository
+    private val libraryRepository: LibraryRepository,
+    private val okHttpClient: OkHttpClient
 ) : ViewModel() {
+
+    private val _isRefreshingProfile = MutableStateFlow(false)
+    val isRefreshingProfile: StateFlow<Boolean> = _isRefreshingProfile.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            preferencesManager.isYouTubeLoggedIn.collectLatest { loggedIn ->
+                if (loggedIn) {
+                    val name = preferencesManager.youtubeUserName.first()
+                    val avatar = preferencesManager.youtubeUserAvatar.first()
+                    val cookies = preferencesManager.youtubeAuthCookies.first()
+                    if ((name.isNullOrBlank() || avatar.isNullOrBlank()) && !cookies.isNullOrBlank()) {
+                        refreshUserProfile()
+                    }
+                }
+            }
+        }
+    }
+
+    fun refreshUserProfile() {
+        viewModelScope.launch {
+            val cookies = preferencesManager.youtubeAuthCookies.first() ?: return@launch
+            val visitorData = preferencesManager.youtubeVisitorData.first()
+            _isRefreshingProfile.value = true
+            try {
+                val profile = YouTubeAuthHelper.fetchUserProfile(okHttpClient, cookies, visitorData)
+                if (profile != null) {
+                    preferencesManager.saveYouTubeAccount(
+                        cookies = cookies,
+                        userName = profile.name,
+                        userEmail = profile.email,
+                        avatarUrl = profile.avatarUrl,
+                        visitorData = visitorData
+                    )
+                }
+            } catch (e: Exception) {
+                // Ignore transient network errors
+            } finally {
+                _isRefreshingProfile.value = false
+            }
+        }
+    }
 
     val isHistoryEnabled: StateFlow<Boolean> = preferencesManager.isHistoryEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -81,6 +126,15 @@ class SettingsViewModel @Inject constructor(
 
     val appLanguage: StateFlow<String?> = preferencesManager.appLanguage
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val preferredSubtitleLanguage: StateFlow<String?> = preferencesManager.preferredSubtitleLanguage
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun setPreferredSubtitleLanguage(tag: String?) {
+        viewModelScope.launch {
+            preferencesManager.setPreferredSubtitleLanguage(tag)
+        }
+    }
 
     val availableLocales = LocaleUtils.getAvailableLocales(context)
 

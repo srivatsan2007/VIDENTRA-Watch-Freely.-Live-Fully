@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import javax.inject.Inject
 import com.arslandaim.playtube.BuildConfig
+import com.arslandaim.playtube.ui.components.CelebrationType
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -102,6 +103,9 @@ class MainViewModel @Inject constructor(
     private val _showBirthdayDialog = MutableStateFlow(false)
     val showBirthdayDialog: StateFlow<Boolean> = _showBirthdayDialog.asStateFlow()
 
+    private val _activeCelebration = MutableStateFlow<CelebrationType?>(null)
+    val activeCelebration: StateFlow<CelebrationType?> = _activeCelebration.asStateFlow()
+
     private val _isUpdateDialogDismissed = MutableStateFlow(false)
     val isUpdateDialogDismissed: StateFlow<Boolean> = _isUpdateDialogDismissed.asStateFlow()
 
@@ -121,15 +125,20 @@ class MainViewModel @Inject constructor(
                 _showWelcomeDialog.value = true
             }
 
-            // Check if today is Developer's Birthday (December 10th)
+            // Check if today matches any annual celebration (New Year, Pongal, Republic Day, Independence Day, Developer Birthday)
             val calendar = java.util.Calendar.getInstance()
-            val isBirthday = calendar.get(java.util.Calendar.MONTH) == java.util.Calendar.DECEMBER &&
-                    calendar.get(java.util.Calendar.DAY_OF_MONTH) == 10
             val currentYear = calendar.get(java.util.Calendar.YEAR)
-            val lastCelebratedYear = preferencesManager.lastBirthdayCelebrationYear.first()
-
-            if (isBirthday && lastCelebratedYear < currentYear) {
-                _showBirthdayDialog.value = true
+            for (celebration in CelebrationType.entries) {
+                if (celebration.isToday(calendar)) {
+                    val lastCelebrated = preferencesManager.getLastCelebrationYear(celebration.id).first()
+                    if (lastCelebrated < currentYear) {
+                        _activeCelebration.value = celebration
+                        if (celebration == CelebrationType.DEVELOPER_BIRTHDAY) {
+                            _showBirthdayDialog.value = true
+                        }
+                        break
+                    }
+                }
             }
         }
     }
@@ -151,16 +160,32 @@ class MainViewModel @Inject constructor(
         _isUpdateDialogDismissed.value = true
     }
 
-    fun dismissBirthdayDialog() {
+    fun dismissCelebration(celebration: CelebrationType) {
         viewModelScope.launch {
             val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
-            preferencesManager.setLastBirthdayCelebrationYear(currentYear)
-            _showBirthdayDialog.value = false
+            preferencesManager.setLastCelebrationYear(celebration.id, currentYear)
+            if (_activeCelebration.value == celebration) {
+                _activeCelebration.value = null
+            }
+            if (celebration == CelebrationType.DEVELOPER_BIRTHDAY) {
+                _showBirthdayDialog.value = false
+            }
+        }
+    }
+
+    fun dismissBirthdayDialog() {
+        dismissCelebration(CelebrationType.DEVELOPER_BIRTHDAY)
+    }
+
+    fun triggerCelebrationPreview(type: CelebrationType) {
+        _activeCelebration.value = type
+        if (type == CelebrationType.DEVELOPER_BIRTHDAY) {
+            _showBirthdayDialog.value = true
         }
     }
 
     fun triggerBirthdayDialogForPreview() {
-        _showBirthdayDialog.value = true
+        triggerCelebrationPreview(CelebrationType.DEVELOPER_BIRTHDAY)
     }
 
     fun setBarsVisibility(visible: Boolean) {
@@ -257,10 +282,11 @@ class MainViewModel @Inject constructor(
         userName: String?,
         userEmail: String?,
         avatarUrl: String?,
+        visitorData: String? = null,
         onAuthorizedPlay: (com.arslandaim.playtube.domain.model.VideoItem) -> Unit
     ) {
         viewModelScope.launch {
-            preferencesManager.saveYouTubeAccount(cookies, userName, userEmail, avatarUrl)
+            preferencesManager.saveYouTubeAccount(cookies, userName, userEmail, avatarUrl, visitorData)
             _showAuthSheet.value = false
             _pendingVideo.value?.let { video ->
                 onAuthorizedPlay(video)

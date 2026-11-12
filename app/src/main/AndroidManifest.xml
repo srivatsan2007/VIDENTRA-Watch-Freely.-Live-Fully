@@ -49,7 +49,6 @@
                 <data android:host="www.youtube.com" />
                 <data android:host="m.youtube.com" />
                 <data android:pathPrefix="/watch" />
-                <data android:pathPrefix="/shorts" />
                 <data android:pathPrefix="/playlist" />
                 <data android:pathPrefix="/channel" />
                 <data android:pathPrefix="/c/" />

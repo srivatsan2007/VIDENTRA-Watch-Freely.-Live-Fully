@@ -11,6 +11,9 @@ import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.RadioButton
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,9 +50,11 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Recommend
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -108,6 +113,7 @@ fun SettingsScreen(
     val youtubeUserName by viewModel.youtubeUserName.collectAsStateWithLifecycle()
     val youtubeUserEmail by viewModel.youtubeUserEmail.collectAsStateWithLifecycle()
     val youtubeUserAvatar by viewModel.youtubeUserAvatar.collectAsStateWithLifecycle()
+    val isRefreshingProfile by viewModel.isRefreshingProfile.collectAsStateWithLifecycle()
     val isSearchHistoryPaused by viewModel.isSearchHistoryPaused.collectAsStateWithLifecycle()
     val isPipEnabled by viewModel.isPipEnabled.collectAsStateWithLifecycle()
     val isBackgroundPlayEnabled by viewModel.isBackgroundPlayEnabled.collectAsStateWithLifecycle()
@@ -118,6 +124,7 @@ fun SettingsScreen(
     val subtitleFontSize by viewModel.subtitleFontSize.collectAsStateWithLifecycle()
     val subtitleBackgroundOpacity by viewModel.subtitleBackgroundOpacity.collectAsStateWithLifecycle()
     val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
+    val preferredSubtitleLanguage by viewModel.preferredSubtitleLanguage.collectAsStateWithLifecycle()
     val availableLocales = viewModel.availableLocales
     val isAutoUpdateEnabled by updateViewModel.isAutoUpdateEnabled.collectAsStateWithLifecycle()
     val updateInfo by updateViewModel.updateInfo.collectAsStateWithLifecycle()
@@ -133,6 +140,7 @@ fun SettingsScreen(
         subtitleFontSize = subtitleFontSize,
         subtitleBackgroundOpacity = subtitleBackgroundOpacity,
         appLanguage = appLanguage,
+        preferredSubtitleLanguage = preferredSubtitleLanguage,
         availableLocales = availableLocales,
         isAutoUpdateEnabled = isAutoUpdateEnabled,
         updateInfo = updateInfo,
@@ -140,7 +148,9 @@ fun SettingsScreen(
         youtubeUserName = youtubeUserName,
         youtubeUserEmail = youtubeUserEmail,
         youtubeUserAvatar = youtubeUserAvatar,
+        isRefreshingProfile = isRefreshingProfile,
         onOpenSignIn = onOpenSignIn,
+        onRefreshProfile = viewModel::refreshUserProfile,
         onSignOutYouTube = viewModel::signOutYouTube,
         onSetSearchHistoryPaused = viewModel::setSearchHistoryPaused,
         onSetPipEnabled = viewModel::setPipEnabled,
@@ -152,6 +162,7 @@ fun SettingsScreen(
         onSetSubtitleFontSize = viewModel::setSubtitleFontSize,
         onSetSubtitleBackgroundOpacity = viewModel::setSubtitleBackgroundOpacity,
         onSetAppLanguage = viewModel::setAppLanguage,
+        onSetPreferredSubtitleLanguage = viewModel::setPreferredSubtitleLanguage,
         onClearLearnedInterests = viewModel::clearLearnedInterests,
         onSetAutoUpdateEnabled = updateViewModel::setAutoUpdateEnabled,
         onClearAllDownloads = viewModel::clearAllDownloads,
@@ -174,6 +185,7 @@ private fun SettingsContent(
     subtitleFontSize: Float,
     subtitleBackgroundOpacity: Float,
     appLanguage: String?,
+    preferredSubtitleLanguage: String?,
     availableLocales: List<java.util.Locale>,
     isAutoUpdateEnabled: Boolean,
     updateInfo: com.arslandaim.playtube.domain.repository.UpdateInfo,
@@ -181,7 +193,9 @@ private fun SettingsContent(
     youtubeUserName: String?,
     youtubeUserEmail: String? = null,
     youtubeUserAvatar: String? = null,
+    isRefreshingProfile: Boolean = false,
     onOpenSignIn: () -> Unit,
+    onRefreshProfile: () -> Unit = {},
     onSignOutYouTube: () -> Unit,
     onSetSearchHistoryPaused: (Boolean) -> Unit,
     onSetPipEnabled: (Boolean) -> Unit,
@@ -193,6 +207,7 @@ private fun SettingsContent(
     onSetSubtitleFontSize: (Float) -> Unit,
     onSetSubtitleBackgroundOpacity: (Float) -> Unit,
     onSetAppLanguage: (String?) -> Unit,
+    onSetPreferredSubtitleLanguage: (String?) -> Unit,
     onClearLearnedInterests: () -> Unit,
     onSetAutoUpdateEnabled: (Boolean) -> Unit,
     onClearAllDownloads: () -> Unit,
@@ -204,6 +219,7 @@ private fun SettingsContent(
     var showClearInterestsDialog by remember { mutableStateOf(false) }
     var showDeveloperDialog by remember { mutableStateOf(false) }
     var showLanguageSheet by remember { mutableStateOf(false) }
+    var showSubtitleLanguageDialog by remember { mutableStateOf(false) }
     var showSignOutConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -277,6 +293,39 @@ private fun SettingsContent(
             onConfirm = {
                 onSignOutYouTube()
                 showSignOutConfirm = false
+            }
+        )
+    }
+
+    if (showSubtitleLanguageDialog) {
+        val subtitleOptions = listOf("ta", "en", "hi", "te", "ml", "kn", "bn", "mr", "es", "fr", "de", "ar", "ja", "ko")
+        AlertDialog(
+            onDismissRequest = { showSubtitleLanguageDialog = false },
+            title = { Text("Preferred subtitle language") },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    (listOf<String?>(null) + subtitleOptions).forEach { tag ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onSetPreferredSubtitleLanguage(tag)
+                                    showSubtitleLanguageDialog = false
+                                }
+                                .padding(vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = preferredSubtitleLanguage == tag, onClick = null)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(subtitleLanguageLabel(tag))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSubtitleLanguageDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         )
     }
@@ -400,14 +449,35 @@ private fun SettingsContent(
                                         }
                                     }
 
-                                    IconButton(
-                                        onClick = { showSignOutConfirm = true }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                                            contentDescription = "Sign Out",
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        IconButton(
+                                            onClick = onRefreshProfile,
+                                            enabled = !isRefreshingProfile
+                                        ) {
+                                            if (isRefreshingProfile) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(20.dp),
+                                                    strokeWidth = 2.dp,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            } else {
+                                                Icon(
+                                                    imageVector = Icons.Default.Refresh,
+                                                    contentDescription = "Sync Profile",
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+
+                                        IconButton(
+                                            onClick = { showSignOutConfirm = true }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                                contentDescription = "Sign Out",
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -423,65 +493,15 @@ private fun SettingsContent(
                 }
             }
 
-            // Update Category
+            // Playback
             item {
-                SettingsGroup(title = stringResource(R.string.settings_group_update)) {
+                SettingsGroup(title = "Playback") {
                     SettingsSwitchItem(
-                        title = stringResource(R.string.settings_auto_update),
-                        subtitle = stringResource(R.string.settings_auto_update_desc),
-                        icon = Icons.Default.Info,
-                        checked = isAutoUpdateEnabled,
-                        onCheckedChange = onSetAutoUpdateEnabled
-                    )
-                    if (isAutoUpdateEnabled && updateInfo.hasUpdate) {
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = stringResource(R.string.update_available, updateInfo.latestVersion),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = updateInfo.releaseNotes,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            TextButton(
-                                onClick = {
-                                    val intent = Intent(Intent.ACTION_VIEW, updateInfo.updateUrl.toUri())
-                                    context.startActivity(intent)
-                                },
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text(stringResource(R.string.download_from_github), fontWeight = FontWeight.Bold)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
-                            }
-                        }
-                    }
-                }
-            }
-
-            // History & Privacy Category
-            item {
-                SettingsGroup(title = stringResource(R.string.settings_group_history_privacy)) {
-                    SettingsItem(
-                        title = stringResource(R.string.settings_view_history),
-                        subtitle = stringResource(R.string.settings_view_history_desc),
-                        icon = Icons.Default.History,
-                        onClick = onViewHistory,
-                        trailingIcon = Icons.AutoMirrored.Filled.KeyboardArrowRight
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.settings_pause_search_history),
-                        subtitle = stringResource(R.string.settings_pause_search_history_desc),
-                        icon = Icons.Default.Pause,
-                        checked = isSearchHistoryPaused,
-                        onCheckedChange = onSetSearchHistoryPaused
+                        title = stringResource(R.string.background_play),
+                        subtitle = stringResource(R.string.background_play_desc),
+                        icon = Icons.Default.PlayArrow,
+                        checked = isBackgroundPlayEnabled,
+                        onCheckedChange = onSetBackgroundPlayEnabled
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                     if (isPipSupported) {
@@ -495,42 +515,18 @@ private fun SettingsContent(
                     }
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                     SettingsSwitchItem(
-                        title = stringResource(R.string.background_play),
-                        subtitle = stringResource(R.string.background_play_desc),
-                        icon = Icons.Default.PlayArrow,
-                        checked = isBackgroundPlayEnabled,
-                        onCheckedChange = onSetBackgroundPlayEnabled
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                    SettingsItem(
-                        title = stringResource(R.string.settings_data_backup),
-                        subtitle = stringResource(R.string.settings_data_backup_desc),
-                        icon = Icons.Default.Info,
-                        onClick = onDataManagement,
-                        trailingIcon = Icons.AutoMirrored.Filled.KeyboardArrowRight
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.settings_pause_recommendations),
-                        subtitle = stringResource(R.string.settings_pause_recommendations_desc),
-                        icon = Icons.Default.Recommend,
-                        checked = isRecommendationsPaused,
-                        onCheckedChange = onSetRecommendationsPaused
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                    SettingsItem(
-                        title = stringResource(R.string.settings_clear_learned_data),
-                        subtitle = stringResource(R.string.settings_clear_learned_data_desc_item),
-                        icon = Icons.Default.AutoAwesome,
-                        onClick = { showClearInterestsDialog = true },
-                        titleColor = MaterialTheme.colorScheme.error
+                        title = stringResource(R.string.settings_player_gestures),
+                        subtitle = stringResource(R.string.settings_player_gestures_desc),
+                        icon = Icons.Default.TouchApp,
+                        checked = isPlayerGesturesEnabled,
+                        onCheckedChange = onSetPlayerGesturesEnabled
                     )
                 }
             }
 
-            // Content Category
+            // Appearance & Language
             item {
-                SettingsGroup(title = stringResource(R.string.settings_group_appearance_playback)) {
+                SettingsGroup(title = "Appearance & Language") {
                     SettingsSwitchItem(
                         title = stringResource(R.string.settings_ambient_mode),
                         subtitle = stringResource(R.string.settings_ambient_mode_desc),
@@ -539,24 +535,6 @@ private fun SettingsContent(
                         onCheckedChange = onSetAmbientModeEnabled
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                    SettingsSwitchItem(
-                        title = stringResource(R.string.settings_player_gestures),
-                        subtitle = stringResource(R.string.settings_player_gestures_desc),
-                        icon = Icons.Default.TouchApp,
-                        checked = isPlayerGesturesEnabled,
-                        onCheckedChange = onSetPlayerGesturesEnabled
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        SettingsSwitchItem(
-                            title = stringResource(R.string.settings_material_you),
-                            subtitle = stringResource(R.string.settings_material_you_desc),
-                            icon = Icons.Default.AutoAwesome,
-                            checked = isDynamicColorEnabled,
-                            onCheckedChange = onSetDynamicColorEnabled
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                    }
                     SettingsItem(
                         title = stringResource(R.string.app_language),
                         subtitle = appLanguage?.let { tag ->
@@ -565,6 +543,30 @@ private fun SettingsContent(
                         } ?: stringResource(R.string.system_default),
                         icon = Icons.Default.Language,
                         onClick = { showLanguageSheet = true }
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                        SettingsSwitchItem(
+                            title = stringResource(R.string.settings_material_you),
+                            subtitle = stringResource(R.string.settings_material_you_desc),
+                            icon = Icons.Default.AutoAwesome,
+                            checked = isDynamicColorEnabled,
+                            onCheckedChange = onSetDynamicColorEnabled
+                        )
+                    }
+                }
+            }
+
+            // Subtitles
+            item {
+                SettingsGroup(title = "Subtitles") {
+                    SettingsItem(
+                        title = "Preferred subtitle language",
+                        subtitle = subtitleLanguageLabel(preferredSubtitleLanguage),
+                        icon = Icons.Default.Language,
+                        onClick = { showSubtitleLanguageDialog = true },
+                        trailingIcon = Icons.AutoMirrored.Filled.KeyboardArrowRight
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                     SettingsItem(
@@ -626,9 +628,54 @@ private fun SettingsContent(
                 }
             }
 
-            // Content Category
+            // Privacy & Recommendations
             item {
-                SettingsGroup(title = stringResource(R.string.settings_group_content)) {
+                SettingsGroup(title = "Privacy & Recommendations") {
+                    SettingsItem(
+                        title = stringResource(R.string.settings_view_history),
+                        subtitle = stringResource(R.string.settings_view_history_desc),
+                        icon = Icons.Default.History,
+                        onClick = onViewHistory,
+                        trailingIcon = Icons.AutoMirrored.Filled.KeyboardArrowRight
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.settings_pause_search_history),
+                        subtitle = stringResource(R.string.settings_pause_search_history_desc),
+                        icon = Icons.Default.Pause,
+                        checked = isSearchHistoryPaused,
+                        onCheckedChange = onSetSearchHistoryPaused
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.settings_pause_recommendations),
+                        subtitle = stringResource(R.string.settings_pause_recommendations_desc),
+                        icon = Icons.Default.Recommend,
+                        checked = isRecommendationsPaused,
+                        onCheckedChange = onSetRecommendationsPaused
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsItem(
+                        title = stringResource(R.string.settings_clear_learned_data),
+                        subtitle = stringResource(R.string.settings_clear_learned_data_desc_item),
+                        icon = Icons.Default.AutoAwesome,
+                        onClick = { showClearInterestsDialog = true },
+                        titleColor = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+
+            // Data & Storage
+            item {
+                SettingsGroup(title = "Data & Storage") {
+                    SettingsItem(
+                        title = stringResource(R.string.settings_data_backup),
+                        subtitle = stringResource(R.string.settings_data_backup_desc),
+                        icon = Icons.Default.Info,
+                        onClick = onDataManagement,
+                        trailingIcon = Icons.AutoMirrored.Filled.KeyboardArrowRight
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                     SettingsItem(
                         title = stringResource(R.string.settings_clear_downloads),
                         subtitle = stringResource(R.string.settings_clear_downloads_desc),
@@ -636,6 +683,48 @@ private fun SettingsContent(
                         onClick = { showClearDownloadsDialog = true },
                         titleColor = MaterialTheme.colorScheme.error
                     )
+                }
+            }
+
+            // Update Category
+            item {
+                SettingsGroup(title = stringResource(R.string.settings_group_update)) {
+                    SettingsSwitchItem(
+                        title = stringResource(R.string.settings_auto_update),
+                        subtitle = stringResource(R.string.settings_auto_update_desc),
+                        icon = Icons.Default.Info,
+                        checked = isAutoUpdateEnabled,
+                        onCheckedChange = onSetAutoUpdateEnabled
+                    )
+                    if (isAutoUpdateEnabled && updateInfo.hasUpdate) {
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = stringResource(R.string.update_available, updateInfo.latestVersion),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = updateInfo.releaseNotes,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            TextButton(
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_VIEW, updateInfo.updateUrl.toUri())
+                                    context.startActivity(intent)
+                                },
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text(stringResource(R.string.download_from_github), fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
+                            }
+                        }
+                    }
                 }
             }
 
@@ -676,6 +765,14 @@ private fun SettingsContent(
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
+}
+
+private fun subtitleLanguageLabel(tag: String?): String {
+    if (tag == null) return "Automatic"
+    val locale = java.util.Locale.forLanguageTag(tag)
+    val native = locale.getDisplayLanguage(locale).replaceFirstChar { it.uppercase() }
+    val english = locale.getDisplayLanguage(java.util.Locale.ENGLISH)
+    return if (native.equals(english, ignoreCase = true) || native.isBlank()) english else "$native ($english)"
 }
 
 @Composable

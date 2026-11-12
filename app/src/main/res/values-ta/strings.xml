@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VIDENTRA</string>
+    <string name="app_tagline">Watch Freely. Live Fully.</string>
+
+    <!-- General -->
+    <string name="retry">மீண்டும் முயற்சி</string>
+    <string name="back">பின்செல்</string>
+    <string name="cancel">ரத்து செய்</string>
+    <string name="delete">நீக்கு</string>
+    <string name="search">தேடு</string>
+    <string name="no_internet">இணைய இணைப்பு இல்லை</string>
+    <string name="error_prefix">பிழை: %s</string>
+    <string name="clear">அழி</string>
+    <string name="close">மூடு</string>
+
+    <!-- Home -->
+    <string name="tab_for_you">உங்களுக்காக</string>
+    <string name="tab_subscriptions">சந்தாக்கள்</string>
+    <string name="personalized_title">உங்களுக்காக தனிப்பயனாக்கப்பட்டது</string>
+    <string name="personalized_desc">உங்கள் தேடல் வரலாற்றின் அடிப்படையில்</string>
+    <string name="no_subscriptions_videos">உங்கள் சந்தாக்களில் இன்னும் வீடியோக்கள் இல்லை.</string>
+    <string name="no_videos_found">வீடியோக்கள் எதுவும் கிடைக்கவில்லை.</string>
+    <string name="continue_playing">தொடர்ந்து பார்க்க</string>
+
+    <!-- Player -->
+    <string name="quality">தரம்</string>
+    <string name="playback_speed">இயக்க வேகம்</string>
+    <string name="description">விளக்கம்</string>
+    <string name="more">மேலும்</string>
+    <string name="related_videos">தொடர்புடைய வீடியோக்கள்</string>
+    <string name="download">பதிவிறக்கு</string>
+    <string name="downloaded">பதிவிறக்கப்பட்டது</string>
+    <string name="like">விருப்பம்</string>
+    <string name="liked">விரும்பியது</string>
+    <string name="save">சேமி</string>
+    <string name="saved">சேமிக்கப்பட்டது</string>
+    <string name="share">பகிர்</string>
+    <string name="info">தகவல்</string>
+    <string name="subscribe">சந்தா சேர்</string>
+    <string name="subscribed">சந்தா செலுத்தியது</string>
+    <string name="auto">தானியங்கி</string>
+    <string name="normal_speed">சாதாரணம்</string>
+    <string name="no_description">விளக்கம் எதுவும் இல்லை</string>
+    <string name="loading">ஏற்றுகிறது...</string>
+    <string name="toggle_subtitles">வசன வரிகளை மாற்று</string>
+    <string name="settings">அமைப்புகள்</string>
+    <string name="waiting_for_connection">இணைப்புக்காக காத்திருக்கிறது...</string>
+
+    <!-- Library -->
+    <string name="library">நூலகம்</string>
+    <string name="history">வரலாறு</string>
+    <string name="subscriptions">சந்தாக்கள்</string>
+    <string name="downloads">பதிவிறக்கங்கள்</string>
+    <string name="favorites">விரும்பிய வீடியோக்கள்</string>
+    <string name="see_all">அனைத்தையும் காண்க</string>
+    <string name="no_history">பார்த்த வரலாறு இன்னும் இல்லை</string>
+    <string name="no_history_desc">நீங்கள் பார்க்கும் வீடியோக்கள் இங்கே தோன்றும்.</string>
+    <string name="no_downloads">பதிவிறக்கங்கள் இன்னும் இல்லை</string>
+    <string name="no_downloads_desc">எப்போது வேண்டுமானாலும் இணையமின்றி பார்க்க வீடியோக்களை பதிவிறக்குங்கள்.</string>
+    <string name="no_favorites">விரும்பிய வீடியோக்கள் இன்னும் இல்லை</string>
+    <string name="no_favorites_desc">நீங்கள் விரும்பும் வீடியோக்கள் இங்கே தோன்றும்.</string>
+    <string name="no_subscriptions">சந்தாக்கள் இன்னும் இல்லை</string>
+    <string name="no_subscriptions_desc">உங்களுக்குப் பிடித்த சேனல்களுக்கு சந்தா செலுத்தினால் இங்கே காணலாம்.</string>
+    <string name="no_playlists">பிடித்த பிளேலிஸ்ட்கள் இன்னும் இல்லை</string>
+    <string name="no_playlists_desc">நீங்கள் சேமித்த பிளேலிஸ்ட்கள் இங்கே காட்டப்படும்.</string>
+    <string name="discover_videos">வீடியோக்களைக் கண்டறி</string>
+    <string name="remove_from_favorites">விரும்பிய வீடியோக்களிலிருந்து நீக்கு</string>
+    <string name="add_to_favorites">விரும்பிய வீடியோக்களில் சேர்</string>
+    <string name="delete_download_title">பதிவிறக்கத்தை நீக்கவா?</string>
+    <string name="delete_download_desc">இந்த பதிவிறக்கப்பட்ட வீடியோவை நீக்க விரும்புகிறீர்களா?</string>
+
+    <!-- Search -->
+    <string name="search_placeholder">Videntra-வில் தேடு</string>
+    <string name="discover_new">புதியதைக் கண்டறியுங்கள்</string>
+    <string name="recent_searches">சமீபத்திய தேடல்கள்</string>
+    <string name="clear_all">அனைத்தையும் அழி</string>
+    <string name="sort_relevance">அனைத்தும்</string>
+    <string name="sort_newest">புதியவை</string>
+    <string name="sort_most_viewed">அதிகம் பார்த்தவை</string>
+    <string name="sort_top_rated">உயர்ந்த மதிப்பீடு</string>
+
+    <!-- Channel & Playlist -->
+    <string name="videos">வீடியோக்கள்</string>
+    <string name="playlists">பிளேலிஸ்ட்கள்</string>
+    <string name="subscribers_hidden">சந்தாதாரர்கள் மறைக்கப்பட்டுள்ளனர்</string>
+    <string name="subscribers_count">%s சந்தாதாரர்கள்</string>
+    <string name="playlist">பிளேலிஸ்ட்</string>
+    <string name="by_author">%s வழங்குவது</string>
+    <string name="download_all">அனைத்தையும் பதிவிறக்கு</string>
+    <string name="video_count">%s வீடியோக்கள்</string>
+    <string name="background_play">பின்னணியில் இயக்கம்</string>
+    <string name="background_play_desc">செயலி சிறிதாக்கப்பட்டாலும் ஒலி தொடர்ந்து ஒலிக்கும்</string>
+
+    <!-- Final Audit Additions -->
+    <string name="back_online">மீண்டும் ஆன்லைனில்</string>
+    <string name="offline_dialog_text">நீங்கள் தற்போது ஆஃப்லைனில் உள்ளீர்கள். உங்கள் பதிவிறக்கங்களைப் பாருங்கள்.</string>
+    <string name="go_to_downloads">பதிவிறக்கங்களுக்குச் செல்</string>
+    <string name="incognito_label">மறைநிலை</string>
+    <string name="smart_cleanup_title">ஸ்மார்ட் சுத்தம்</string>
+    <string name="smart_cleanup_desc">நீங்கள் ஏற்கனவே பார்த்து முடித்த (90%க்கு மேல்) பதிவிறக்கப்பட்ட வீடியோக்கள் அனைத்தும் நீக்கப்படும்.</string>
+    <string name="clean_now">இப்போது சுத்தம் செய்</string>
+    <string name="clear_history_title">பார்த்த வரலாற்றை அழிக்கவா?</string>
+    <string name="clear_history_desc">உங்கள் முழு பார்த்த வரலாற்றையும் அழிக்க விரும்புகிறீர்களா? இதை மீட்க முடியாது.</string>
+    <string name="pause_watch_history">பார்த்த வரலாற்றை இடைநிறுத்து</string>
+    <string name="not_interested">விருப்பமில்லை</string>
+    <string name="up_next">அடுத்து</string>
+    <string name="play_now">இப்போது இயக்கு</string>
+    <string name="search_offline">ஆஃப்லைனில் தேடு...</string>
+    <string name="duration">கால அளவு</string>
+    <string name="apply">பயன்படுத்து</string>
+    <string name="close_app_on_finish">முடிந்ததும் செயலியை மூடு</string>
+    <string name="close_app_desc">Videntra-வை மூடி பேட்டரியை சேமியுங்கள்</string>
+    <string name="timer_minutes_placeholder">%d நிமிடங்கள்</string>
+    <string name="subtitles">வசன வரிகள்</string>
+    <string name="off">அணை</string>
+    <string name="history_cleared">வரலாறு அழிக்கப்பட்டது</string>
+    <string name="ends_at">%s மணிக்கு முடியும்</string>
+    <string name="video_quality">வீடியோ தரம்</string>
+    <string name="video">வீடியோ</string>
+    <string name="audio">ஆடியோ</string>
+    <string name="high_quality">உயர் தரம்</string>
+    <string name="download_quality">பதிவிறக்க தரம்</string>
+    <string name="playlist_download_quality">பிளேலிஸ்ட் பதிவிறக்க தரம்</string>
+    <string name="auto_generated">தானாக உருவாக்கப்பட்டது</string>
+    <string name="app_language">செயலி மொழி</string>
+    <string name="language_auto_generated">%1$s (%2$s)</string>
+
+    <!-- Sleep Timer -->
+    <string name="sleep_timer">தூக்க நேரங்காட்டி</string>
+    <string name="timer_off">அணை</string>
+    <string name="timer_15">15 நிமிடங்கள்</string>
+    <string name="timer_30">30 நிமிடங்கள்</string>
+    <string name="timer_45">45 நிமிடங்கள்</string>
+    <string name="timer_60">60 நிமிடங்கள்</string>
+    <string name="timer_end_of_video">வீடியோ முடிவில்</string>
+    <string name="timer_minutes_remaining">%d நிமிடங்கள் மீதமுள்ளன</string>
+    <string name="timer_end_of_video_active">வீடியோ முடிந்ததும் நிற்கும்</string>
+
+    <!-- Settings -->
+    <string name="about_developer">உருவாக்குநர் பற்றி</string>
+    <string name="developed_by">உருவாக்கியவர்: Srivatsan</string>
+    <string name="ok">சரி</string>
+    <string name="confirm">உறுதிசெய்</string>
+    <string name="clear_all_downloads_title">அனைத்து பதிவிறக்கங்களையும் அழிக்கவா?</string>
+    <string name="clear_all_downloads_desc">பதிவிறக்கப்பட்ட அனைத்து வீடியோக்களையும் நீக்க விரும்புகிறீர்களா? இதை மீட்க முடியாது.</string>
+    <string name="clear_learned_data_title">கற்ற தரவை அழிக்கவா?</string>
+    <string name="clear_learned_data_desc">கற்றுக்கொண்ட உங்கள் ஆர்வங்கள் அனைத்தும் அழிக்கப்பட்டு பரிந்துரை அமைப்பு மீட்டமைக்கப்படும். இதை மீட்க முடியாது.</string>
+    <string name="settings_group_update">செயலி புதுப்பிப்பு</string>
+    <string name="settings_auto_update">GitHub வெளியீடுகளை தானாக சரிபார்</string>
+    <string name="settings_auto_update_desc">GitHub-ல் புதிய பதிப்பு வந்தால் அறிவிக்கவும்</string>
+    <string name="update_available">புதிய புதுப்பிப்பு கிடைக்கிறது: %s</string>
+    <string name="download_from_github">GitHub-லிருந்து பதிவிறக்கு</string>
+    <string name="settings_group_history_privacy">வரலாறு &amp; தனியுரிமை</string>
+    <string name="settings_view_history">வரலாற்றைக் காண்க</string>
+    <string name="settings_view_history_desc">நீங்கள் பார்த்த வீடியோக்களை நிர்வகிக்கவும்</string>
+    <string name="settings_pause_search_history">தேடல் வரலாற்றை இடைநிறுத்து</string>
+    <string name="settings_pause_search_history_desc">பரிந்துரைகளும் இடைநிறுத்தப்படும்</string>
+    <string name="settings_pip">படத்துக்குள் படம்</string>
+    <string name="settings_pip_desc">சிறிய சாளரத்தில் தொடர்ந்து பாருங்கள்</string>
+    <string name="settings_data_backup">தரவு &amp; காப்புப்பிரதி</string>
+    <string name="settings_data_backup_desc">Takeout மற்றும் சொந்த காப்புப்பிரதிகளை இறக்குமதி செய்</string>
+    <string name="settings_pause_recommendations">பரிந்துரைகளை இடைநிறுத்து</string>
+    <string name="settings_pause_recommendations_desc">உங்கள் ஆர்வங்களை கற்றுக்கொள்வதை தற்காலிகமாக நிறுத்து</string>
+    <string name="settings_clear_learned_data">கற்ற தரவை அழி</string>
+    <string name="settings_clear_learned_data_desc_item">பரிந்துரை அமைப்பின் சுயவிவரத்தை மீட்டமை</string>
+    <string name="settings_group_appearance_playback">தோற்றம் &amp; இயக்கம்</string>
+    <string name="settings_ambient_mode">சுற்றுப்புற பயன்முறை</string>
+    <string name="settings_ambient_mode_desc">வீடியோவின் வண்ணங்களுக்கு ஏற்ற பின்னணி ஒளிர்வு</string>
+    <string name="settings_player_gestures">பிளேயர் சைகைகள்</string>
+    <string name="settings_player_gestures_desc">ஒலி மற்றும் பிரகாசத்திற்கு ஸ்வைப் சைகைகளை இயக்கு</string>
+    <string name="settings_material_you">Material You</string>
+    <string name="settings_material_you_desc">சாதனத்தின் தீம் நிறத்திற்கு ஏற்ப மாறும்</string>
+    <string name="system_default">கணினி இயல்புநிலை</string>
+    <string name="settings_subtitle_styles">வசன வரி பாணிகள்</string>
+    <string name="settings_subtitle_styles_desc">எழுத்தின் அளவு மற்றும் பின்னணியை தனிப்பயனாக்கு</string>
+    <string name="subtitle_font_size">எழுத்தின் அளவு: %dsp</string>
+    <string name="subtitle_background_opacity">பின்னணி ஒளிபுகாத்தன்மை: %d%%</string>
+    <string name="subtitle_preview">வசன வரி முன்னோட்டம்</string>
+    <string name="settings_group_content">உள்ளடக்கம்</string>
+    <string name="settings_clear_downloads">அனைத்து பதிவிறக்கங்களையும் அழி</string>
+    <string name="settings_clear_downloads_desc">ஆஃப்லைன் வீடியோக்கள் அனைத்தையும் நீக்கு</string>
+    <string name="settings_group_about">பற்றி</string>
+    <string name="settings_about_developer">உருவாக்குநர் பற்றி</string>
+    <string name="settings_about_developer_desc">உருவாக்கியவர் பற்றிய தகவல்</string>
+    <string name="settings_view_source">மூலக் குறியீட்டைக் காண்க</string>
+    <string name="settings_view_source_desc">GitHub-ல் திட்டத்தைப் பாருங்கள்</string>
+    <string name="settings_app_version">செயலி பதிப்பு</string>
+
+    <!-- Import Errors -->
+    <string name="error_history_not_found">ZIP அல்லது தேர்வில் வரலாற்றுக் கோப்பு கிடைக்கவில்லை</string>
+    <string name="error_subscriptions_not_found">ZIP அல்லது தேர்வில் சந்தாக்கள் கோப்பு கிடைக்கவில்லை</string>
+    <string name="error_malformed_history">வரலாற்றுக் கோப்பு சரியாக இல்லை</string>
+    <string name="error_malformed_csv">சந்தாக்கள் கோப்பு சரியாக இல்லை</string>
+    <string name="importing_items">%d உருப்படிகள் இறக்குமதி செய்யப்பட்டன...</string>
+
+    <!-- Player Action & Repeat Modes -->
+    <string name="repeat_off">மீண்டும் இயக்கம் அணை</string>
+    <string name="repeat_one">ஒன்றை மீண்டும் இயக்கு</string>
+    <string name="repeat_play_next">தானியங்கி இயக்கம்</string>
+    <string name="repeat_mode">மீண்டும் இயக்கும் முறை</string>
+    <string name="downloaded_videos">பதிவிறக்கப்பட்ட வீடியோக்கள்</string>
+    <string name="offline_downloads">ஆஃப்லைன் பதிவிறக்கங்கள்</string>
+    <string name="added_to_favorites">விரும்பிய வீடியோக்களில் சேர்க்கப்பட்டது</string>
+    <string name="removed_from_favorites">விரும்பிய வீடியோக்களிலிருந்து நீக்கப்பட்டது</string>
+    <string name="downloading_started">பதிவிறக்கம் தொடங்கியது</string>
+    <string name="connection_lost_waiting">இணைப்பு துண்டிக்கப்பட்டது. தொடர காத்திருக்கிறது...</string>
+    <string name="no_previous_video">இந்த அமர்வில் முந்தைய வீடியோ இல்லை</string>
+    <string name="skipped_segment">%s தவிர்க்கப்பட்டது</string>
+</resources>

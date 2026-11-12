@@ -5,6 +5,7 @@
 */
 package com.arslandaim.playtube.data.network
 
+import com.arslandaim.playtube.data.local.PreferencesManager
 import com.arslandaim.playtube.utils.PTLog
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +21,8 @@ import javax.inject.Singleton
 
 @Singleton
 class NewPipeInitializer @Inject constructor(
-    private val okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient,
+    private val preferencesManager: PreferencesManager
 ) {
     private val initializationDeferred = CompletableDeferred<Unit>()
     private val mutex = Mutex()
@@ -35,7 +37,7 @@ class NewPipeInitializer @Inject constructor(
             try {
                 withContext(Dispatchers.IO) {
                     NewPipe.init(
-                        YouTubeDownloader(okHttpClient),
+                        YouTubeDownloader(okHttpClient, preferencesManager),
                         Localization.DEFAULT,
                         ContentCountry("US")
                     )

@@ -423,8 +423,14 @@ fun VideoList(
                 key = { video -> video.id },
                 contentType = { "video" }
             ) { video ->
-                val currentOnFavoriteClick = remember(video, onFavoriteClick) {
-                    if (onFavoriteClick != null) { { onFavoriteClick(video) } } else null
+                val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+                val currentOnFavoriteClick = remember(video, onFavoriteClick, haptic) {
+                    if (onFavoriteClick != null) {
+                        {
+                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                            onFavoriteClick(video)
+                        }
+                    } else null
                 }
                 val currentOnNotInterestedClick = remember(video, onNotInterestedClick) {
                     if (onNotInterestedClick != null) { { onNotInterestedClick(video) } } else null
@@ -447,6 +453,7 @@ fun VideoList(
 
                 VideoItemRow(
                     video = video,
+                    modifier = Modifier.animateItem(),
                     isDownloaded = downloadedIds.contains(video.id),
                     isFavorite = favoriteIds.contains(video.id),
                     isSaved = savedVideoIds.contains(video.id),
@@ -498,8 +505,14 @@ fun VideoList(
                 key = { video -> video.id },
                 contentType = { "video" }
             ) { video ->
-                val currentOnFavoriteClick = remember(video, onFavoriteClick) {
-                    if (onFavoriteClick != null) { { onFavoriteClick(video) } } else null
+                val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+                val currentOnFavoriteClick = remember(video, onFavoriteClick, haptic) {
+                    if (onFavoriteClick != null) {
+                        {
+                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                            onFavoriteClick(video)
+                        }
+                    } else null
                 }
                 val currentOnNotInterestedClick = remember(video, onNotInterestedClick) {
                     if (onNotInterestedClick != null) { { onNotInterestedClick(video) } } else null
@@ -522,6 +535,7 @@ fun VideoList(
 
                 VideoItemRow(
                     video = video,
+                    modifier = Modifier.animateItem(),
                     isDownloaded = downloadedIds.contains(video.id),
                     isFavorite = favoriteIds.contains(video.id),
                     onFavoriteClick = currentOnFavoriteClick,
@@ -553,6 +567,7 @@ fun VideoList(
 @Composable
 fun VideoItemRow(
     video: VideoItem,
+    modifier: Modifier = Modifier,
     isDownloaded: Boolean = false,
     isFavorite: Boolean = false,
     isSaved: Boolean = false,
@@ -570,9 +585,9 @@ fun VideoItemRow(
     val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "VideoScale")
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 14.dp, vertical = 10.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -586,12 +601,9 @@ fun VideoItemRow(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .border(
-                    width = 0.5.dp, 
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f), 
-                    shape = RoundedCornerShape(16.dp)
-                )
+                .shadow(6.dp, RoundedCornerShape(24.dp), clip = false)
+                .clip(RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
             ThumbnailImage(
                 videoId = video.id,
@@ -602,23 +614,36 @@ fun VideoItemRow(
                     .aspectRatio(16f / 9f)
             )
             
+            // Soft bottom gradient so the duration badge stays readable
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
+                        )
+                    )
+            )
+
             // High-End Duration Badge
             if (video.duration > 0) {
                 Surface(
-                    color = Color.Black.copy(alpha = 0.75f),
-                    shape = RoundedCornerShape(6.dp),
+                    color = Color.Black.copy(alpha = 0.7f),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(8.dp)
+                        .padding(12.dp)
                 ) {
                     Text(
                         text = VideoUtils.formatDuration(video.duration),
                         color = Color.White,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Black
+                            fontWeight = FontWeight.SemiBold
                         ),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                     )
                 }
             }
@@ -627,7 +652,7 @@ fun VideoItemRow(
             if (isDownloaded) {
                 Surface(
                     color = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(bottomStart = 12.dp),
+                    shape = RoundedCornerShape(bottomStart = 18.dp),
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     Icon(
@@ -655,7 +680,7 @@ fun VideoItemRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 12.dp),
+                .padding(top = 14.dp, start = 4.dp),
             verticalAlignment = Alignment.Top
         ) {
             // Channel Avatar
@@ -668,7 +693,7 @@ fun VideoItemRow(
                     ),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.55f))
             ) {
                 AsyncImage(
                     model = video.uploaderThumbnailUrl,
@@ -702,9 +727,9 @@ fun VideoItemRow(
                     Text(
                         text = video.title,
                         style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.SemiBold,
                             lineHeight = 22.sp,
-                            letterSpacing = (-0.2).sp
+                            letterSpacing = 0.sp
                         ),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,

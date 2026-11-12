@@ -238,10 +238,10 @@ class PlaybackManager @Inject constructor(
             } else {
                 // Fallback: If adaptive is requested but no audio stream is found, 
                 // try to find a non-adaptive stream (standard MPEG-4) to avoid silent playback.
-                val fallbackStream = bundle.videoStreams.find { !it.isAdaptive }
-                if (fallbackStream != null) {
-                    PTLog.w("PlaybackManager", "Adaptive stream requested but audio URL missing. Falling back to standard stream: ${fallbackStream.quality}")
-                    val fallbackMediaItem = mediaItem.buildUpon().setUri(fallbackStream.url).build()
+                val fallbackUrl = bundle.videoStreams.find { !it.isAdaptive }?.url ?: bundle.progressiveFallbackUrl
+                if (fallbackUrl != null) {
+                    PTLog.w("PlaybackManager", "Adaptive stream requested but audio URL missing. Falling back to muxed stream")
+                    val fallbackMediaItem = mediaItem.buildUpon().setUri(fallbackUrl).build()
                     player.setMediaSource(mediaSourceFactory.createMediaSource(fallbackMediaItem))
                 } else {
                     player.setMediaSource(mediaSourceFactory.createMediaSource(mediaItem))
@@ -294,7 +294,8 @@ class PlaybackManager @Inject constructor(
                 val audioSource = mediaSourceFactory.createMediaSource(MediaItem.fromUri(audioUrl))
                 MergingMediaSource(videoSource, audioSource)
             } else {
-                mediaSourceFactory.createMediaSource(mediaItem)
+                val fb = bundle.progressiveFallbackUrl
+                mediaSourceFactory.createMediaSource(if (fb != null) mediaItem.buildUpon().setUri(fb).build() else mediaItem)
             }
         } else {
             mediaSourceFactory.createMediaSource(mediaItem)
@@ -400,7 +401,8 @@ class PlaybackManager @Inject constructor(
                 val audioSource = mediaSourceFactory.createMediaSource(MediaItem.fromUri(audioUrl))
                 MergingMediaSource(videoSource, audioSource)
             } else {
-                mediaSourceFactory.createMediaSource(mediaItem)
+                val fb = bundle.progressiveFallbackUrl
+                mediaSourceFactory.createMediaSource(if (fb != null) mediaItem.buildUpon().setUri(fb).build() else mediaItem)
             }
         } else {
             mediaSourceFactory.createMediaSource(mediaItem)
@@ -481,7 +483,8 @@ class PlaybackManager @Inject constructor(
                 val audioSource = mediaSourceFactory.createMediaSource(MediaItem.fromUri(audioUrl))
                 MergingMediaSource(videoSource, audioSource)
             } else {
-                mediaSourceFactory.createMediaSource(mediaItem)
+                val fb = bundle.progressiveFallbackUrl
+                mediaSourceFactory.createMediaSource(if (fb != null) mediaItem.buildUpon().setUri(fb).build() else mediaItem)
             }
         } else {
             mediaSourceFactory.createMediaSource(mediaItem)

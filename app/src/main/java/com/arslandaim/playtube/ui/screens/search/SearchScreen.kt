@@ -118,10 +118,12 @@ fun SearchScreen(
         onSortChange = viewModel::onSortChange,
         onToggleGrid = viewModel::toggleGridView,
         onSearch = { query ->
-            if (query.trim().equals("#birthday", ignoreCase = true) ||
-                query.trim().equals("#srivatsan", ignoreCase = true) ||
-                query.trim().equals("srivatsan birthday", ignoreCase = true)) {
-                mainViewModel.triggerBirthdayDialogForPreview()
+            val trimmed = query.trim()
+            val matchedCelebration = com.arslandaim.playtube.ui.components.CelebrationType.entries.firstOrNull { celeb ->
+                celeb.easterEggTriggers.any { it.equals(trimmed, ignoreCase = true) }
+            }
+            if (matchedCelebration != null) {
+                mainViewModel.triggerCelebrationPreview(matchedCelebration)
             } else {
                 viewModel.search(query)
             }

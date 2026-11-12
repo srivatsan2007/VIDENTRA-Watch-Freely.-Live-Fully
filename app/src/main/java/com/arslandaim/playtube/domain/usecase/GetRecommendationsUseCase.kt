@@ -66,7 +66,8 @@ class GetRecommendationsUseCase @Inject constructor(
             val baseTopics = (seedKeywords + subTopicSeeds).distinct().take(6)
             
             // Fix Cold Start: Ensure searchTopics is never empty
-            val searchTopics = when {
+            val extraPool = listOf("Music", "Gaming", "Science", "Technology", "News", "Sports", "Movies", "Comedy", "Cooking", "Travel", "Education", "Podcast")
+            val searchTopicsRaw = when {
                 discoveryMode -> (baseTopics + NeuroDiscovery.getDiscoverySeeds(seedKeywords)).distinct().take(8)
                 baseTopics.isEmpty() -> {
                     // Default to major categories if user has no interests yet
@@ -74,6 +75,8 @@ class GetRecommendationsUseCase @Inject constructor(
                 }
                 else -> baseTopics
             }
+            // On manual refresh add a random extra topic so the feed actually changes
+            val searchTopics = if (forceRefresh) (searchTopicsRaw + extraPool.shuffled().take(2)).distinct() else searchTopicsRaw
 
             searchTopics.chunked(3).forEach { chunk -> 
                 val deferred = chunk.map { topic ->

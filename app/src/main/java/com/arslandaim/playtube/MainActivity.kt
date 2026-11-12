@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -60,6 +61,7 @@ import com.arslandaim.playtube.services.PlaybackService
 import com.arslandaim.playtube.ui.components.GlassSurface
 import com.arslandaim.playtube.ui.components.WelcomeDialog
 import com.arslandaim.playtube.ui.components.AppUpdateDialog
+import com.arslandaim.playtube.ui.components.CelebrationDialog
 import com.arslandaim.playtube.ui.components.DeveloperBirthdayDialog
 import com.arslandaim.playtube.ui.components.SignInRequiredDialog
 import com.arslandaim.playtube.ui.components.YouTubeAuthSheet
@@ -481,11 +483,12 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
 
-                // Developer Birthday Celebration Dialog (December 10th)
-                val showBirthdayDialog by mainViewModel.showBirthdayDialog.collectAsStateWithLifecycle()
-                if (showBirthdayDialog) {
-                    DeveloperBirthdayDialog(
-                        onDismiss = { mainViewModel.dismissBirthdayDialog() }
+                // Annual Celebrations Dialog (New Year, Pongal, Republic Day, Independence Day, Developer Birthday)
+                val activeCelebration by mainViewModel.activeCelebration.collectAsStateWithLifecycle()
+                if (activeCelebration != null) {
+                    CelebrationDialog(
+                        celebration = activeCelebration!!,
+                        onDismiss = { mainViewModel.dismissCelebration(activeCelebration!!) }
                     )
                 }
 
@@ -506,8 +509,8 @@ class MainActivity : AppCompatActivity() {
                 if (showAuthSheet) {
                     YouTubeAuthSheet(
                         onDismiss = { mainViewModel.dismissAuthSheet() },
-                        onAuthSuccess = { cookies, name, email, avatar ->
-                            mainViewModel.onAuthSuccess(cookies, name, email, avatar) { playerViewModel.loadVideo(it) }
+                        onAuthSuccess = { cookies, name, email, avatar, visitorData ->
+                            mainViewModel.onAuthSuccess(cookies, name, email, avatar, visitorData) { playerViewModel.loadVideo(it) }
                         }
                     )
                 }
@@ -637,11 +640,12 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun VidentraBottomBar(navController: androidx.navigation.NavHostController) {
+    // (destination, filled icon, outlined icon, label)
     val items = listOf(
-        Triple(Destination.Home, Icons.Default.Home, stringResource(R.string.tab_for_you)),
-        Triple(Destination.Subscriptions, Icons.Default.Subscriptions, stringResource(R.string.subscriptions)),
-        Triple(Destination.Search(""), Icons.Default.Search, stringResource(R.string.search)),
-        Triple(Destination.Library, Icons.Default.LibraryMusic, stringResource(R.string.library))
+        listOf(Destination.Home, Icons.Filled.Home, Icons.Outlined.Home, stringResource(R.string.tab_for_you)),
+        listOf(Destination.Subscriptions, Icons.Filled.Subscriptions, Icons.Outlined.Subscriptions, stringResource(R.string.subscriptions)),
+        listOf(Destination.Search(""), Icons.Filled.Search, Icons.Outlined.Search, stringResource(R.string.search)),
+        listOf(Destination.Library, Icons.Filled.LibraryMusic, Icons.Outlined.LibraryMusic, stringResource(R.string.library))
     )
     
     NavigationBar(
@@ -653,7 +657,11 @@ fun VidentraBottomBar(navController: androidx.navigation.NavHostController) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
         
-        items.forEach { (destination, icon, label) ->
+        items.forEach { entry ->
+            val destination = entry[0] as Destination
+            val filledIcon = entry[1] as androidx.compose.ui.graphics.vector.ImageVector
+            val outlinedIcon = entry[2] as androidx.compose.ui.graphics.vector.ImageVector
+            val label = entry[3] as String
             val isSelected = currentDestination?.hierarchy?.any { 
                 it.route?.contains(destination.routeRoot, ignoreCase = true) == true 
             } == true
@@ -661,7 +669,7 @@ fun VidentraBottomBar(navController: androidx.navigation.NavHostController) {
             NavigationBarItem(
                 icon = { 
                     Icon(
-                        imageVector = icon, 
+                        imageVector = if (isSelected) filledIcon else outlinedIcon, 
                         contentDescription = null, 
                         modifier = Modifier.size(22.dp)
                     ) 
@@ -679,7 +687,7 @@ fun VidentraBottomBar(navController: androidx.navigation.NavHostController) {
                     selectedTextColor = MaterialTheme.colorScheme.primary,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    indicatorColor = Color.Transparent // Modern transparent indicator
+                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer
                 ),
                 onClick = {
                     if (!isSelected) {

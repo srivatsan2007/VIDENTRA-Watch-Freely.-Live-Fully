@@ -14,7 +14,6 @@ class VideoUtilsTest {
     fun `extractVideoId correctly parses various formats`() {
         assertEquals("dQw4w9WgXcQ", VideoUtils.extractVideoId("https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
         assertEquals("dQw4w9WgXcQ", VideoUtils.extractVideoId("https://youtu.be/dQw4w9WgXcQ"))
-        assertEquals("dQw4w9WgXcQ", VideoUtils.extractVideoId("https://www.youtube.com/shorts/dQw4w9WgXcQ"))
         assertEquals("dQw4w9WgXcQ", VideoUtils.extractVideoId("https://www.youtube.com/embed/dQw4w9WgXcQ"))
         assertEquals("dQw4w9WgXcQ", VideoUtils.extractVideoId("https://www.youtube.com/v/dQw4w9WgXcQ"))
         assertEquals("dQw4w9WgXcQ", VideoUtils.extractVideoId("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10s"))

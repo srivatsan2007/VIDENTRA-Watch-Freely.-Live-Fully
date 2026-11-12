@@ -13,6 +13,7 @@ import com.arslandaim.playtube.domain.repository.VideoRepository
 import com.arslandaim.playtube.utils.Constants
 import com.arslandaim.playtube.utils.PTLog
 import com.arslandaim.playtube.utils.VideoUtils
+import com.arslandaim.playtube.utils.isShortVideo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -92,9 +93,14 @@ class VideoRepositoryImpl @Inject constructor(
                     scheduledStartTime = scheduledStartTime,
                     relatedVideos = streamInfo.relatedItems
                         ?.filterIsInstance<StreamInfoItem>()
+                        ?.filterNot { it.isShortVideo() }
                         ?.map { mapToVideoItem(it) } ?: emptyList(),
                     nextRelatedVideosPage = null,
                     bestAudioStreamUrl = bestAudioStream?.url,
+                    progressiveFallbackUrl = streamInfo.videoStreams
+                        ?.filter { !it.url.isNullOrBlank() }
+                        ?.maxByOrNull { it.getResolution()?.filter { c -> c.isDigit() }?.toIntOrNull() ?: 0 }
+                        ?.url,
                     subtitles = subtitlesDeferred.await()
                 )
                 
@@ -142,7 +148,7 @@ class VideoRepositoryImpl @Inject constructor(
     }
 
     private fun selectBestAudioStream(streamInfo: StreamInfo): AudioStream? {
-        val streams = streamInfo.audioStreams ?: return null
+        val streams = streamInfo.audioStreams?.filter { !it.url.isNullOrBlank() } ?: return null
         val originals = streams.filter { it.audioTrackType == AudioTrackType.ORIGINAL }
         return if (originals.isNotEmpty()) originals.maxByOrNull { it.averageBitrate }
         else streams.filter { it.audioLocale?.language == "en" }.maxByOrNull { it.averageBitrate } ?: streams.maxByOrNull { it.averageBitrate }
@@ -192,7 +198,7 @@ class VideoRepositoryImpl @Inject constructor(
                         val extractor = ServiceList.YouTube.getChannelTabExtractor(handler)
                         extractor.fetchPage()
                         val page = extractor.initialPage
-                        Pair(page.items.filterIsInstance<StreamInfoItem>().map { mapToVideoItem(it, avatar) }, if (page.hasNextPage()) page.nextPage else null)
+                        Pair(page.items.filterIsInstance<StreamInfoItem>().filterNot { it.isShortVideo() }.map { mapToVideoItem(it, avatar) }, if (page.hasNextPage()) page.nextPage else null)
                     } catch (e: Exception) { PTLog.w("VideoRepository", "Failed to fetch channel videos", e); Pair(emptyList<VideoItem>(), null) }
                 }
 
@@ -222,7 +228,7 @@ class VideoRepositoryImpl @Inject constructor(
             try {
                 val handler = ServiceList.YouTube.channelTabLHFactory.fromUrl(channelUrl + "/videos")
                 val nextPage = ServiceList.YouTube.getChannelTabExtractor(handler).getPage(page)
-                PaginatedList(nextPage.items.filterIsInstance<StreamInfoItem>().map { mapToVideoItem(it) }, if (nextPage.hasNextPage()) nextPage.nextPage else null)
+                PaginatedList(nextPage.items.filterIsInstance<StreamInfoItem>().filterNot { it.isShortVideo() }.map { mapToVideoItem(it) }, if (nextPage.hasNextPage()) nextPage.nextPage else null)
             } catch (e: Exception) { PTLog.e("VideoRepository", "Error fetching next channel page", e); PaginatedList(emptyList(), null) }
         }
     }
@@ -234,7 +240,7 @@ class VideoRepositoryImpl @Inject constructor(
                 // Use the Trending kiosk specifically for the YouTube service
                 val kiosk = KioskInfo.getInfo(ServiceList.YouTube, Constants.YouTube.TRENDING_URL)
                 PaginatedList(
-                    items = kiosk.relatedItems.filterIsInstance<StreamInfoItem>().map { mapToVideoItem(it) },
+                    items = kiosk.relatedItems.filterIsInstance<StreamInfoItem>().filterNot { it.isShortVideo() }.map { mapToVideoItem(it) },
                     nextPage = kiosk.nextPage
                 )
             } catch (e: Exception) { 
@@ -250,7 +256,7 @@ class VideoRepositoryImpl @Inject constructor(
             try {
                 val nextKiosk = KioskInfo.getMoreItems(ServiceList.YouTube, Constants.YouTube.TRENDING_URL, page)
                 PaginatedList(
-                    items = nextKiosk.items.filterIsInstance<StreamInfoItem>().map { mapToVideoItem(it) },
+                    items = nextKiosk.items.filterIsInstance<StreamInfoItem>().filterNot { it.isShortVideo() }.map { mapToVideoItem(it) },
                     nextPage = if (nextKiosk.hasNextPage()) nextKiosk.nextPage else null
                 )
             } catch (e: Exception) {
