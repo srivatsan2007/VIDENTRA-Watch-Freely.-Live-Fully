@@ -64,43 +64,66 @@ class YouTubeDownloader(
         val okHttpRequestBuilder = OkHttpRequest.Builder()
             .url(url)
             .method(method, data?.toRequestBody())
-            .addHeader("Accept-Language", "en-US,en;q=0.9")
-            .addHeader("User-Agent", Constants.DEFAULT_USER_AGENT)
 
-        val mergedHeaders = headers.toMutableMap()
+        val mergedHeaders = mutableMapOf<String, MutableList<String>>()
+        headers.forEach { (k, v) ->
+            mergedHeaders[k] = v.toMutableList()
+        }
 
         // Bypass YouTube Consent/GDPR redirection in Europe & attach authenticated session
         if (url.contains("youtube.com") || url.contains("googlevideo.com")) {
-            val existingCookies = (mergedHeaders["Cookie"] ?: emptyList()).toMutableList()
-            if (existingCookies.none { it.contains("CONSENT=YES") }) {
+            val existingCookies = (mergedHeaders["Cookie"] ?: mutableListOf()).flatMap { it.split(";") }
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .toMutableList()
+
+            if (existingCookies.none { it.startsWith("CONSENT=") }) {
                 existingCookies.add(Constants.YouTube.CONSENT_COOKIE)
             }
 
             refreshAuthCache()
             if (cachedIsLoggedIn && !cachedAuthCookies.isNullOrBlank()) {
                 val cookies = cachedAuthCookies!!
-                existingCookies.add(cookies)
+                existingCookies.addAll(cookies.split(";").map { it.trim() }.filter { it.isNotEmpty() })
 
-                if (url.contains("youtube.com")) {
+                // Only attach InnerTube API headers to youtubei/v1 endpoints
+                if (url.contains("youtube.com/youtubei/v1/")) {
                     val sapisid = YouTubeAuthHelper.extractSapisid(cookies)
                     if (sapisid != null && !mergedHeaders.containsKey("Authorization")) {
                         val authHeader = YouTubeAuthHelper.generateSapisidHash(sapisid, "https://www.youtube.com")
-                        mergedHeaders["Authorization"] = listOf(authHeader)
-                        mergedHeaders["X-Origin"] = listOf("https://www.youtube.com")
-                        mergedHeaders["Referer"] = listOf("https://www.youtube.com/")
+                        mergedHeaders["Authorization"] = mutableListOf(authHeader)
+                        mergedHeaders["X-Origin"] = mutableListOf("https://www.youtube.com")
+                        mergedHeaders["Referer"] = mutableListOf("https://www.youtube.com/")
                     }
                     if (!cachedVisitorData.isNullOrBlank() && !mergedHeaders.containsKey("X-Goog-Visitor-Id")) {
-                        mergedHeaders["X-Goog-Visitor-Id"] = listOf(cachedVisitorData!!)
+                        mergedHeaders["X-Goog-Visitor-Id"] = mutableListOf(cachedVisitorData!!)
                     }
                 }
             }
-            mergedHeaders["Cookie"] = existingCookies
+
+            val combinedCookieString = existingCookies.distinct().joinToString("; ")
+            mergedHeaders["Cookie"] = mutableListOf(combinedCookieString)
         }
 
+        // Apply headers without duplicating User-Agent or Cookie
         mergedHeaders.forEach { (key, values) ->
-            values.forEach { value ->
-                okHttpRequestBuilder.addHeader(key, value)
+            if (key.equals("Cookie", ignoreCase = true)) {
+                okHttpRequestBuilder.header("Cookie", values.firstOrNull() ?: "")
+            } else if (key.equals("User-Agent", ignoreCase = true)) {
+                okHttpRequestBuilder.header("User-Agent", values.firstOrNull() ?: Constants.DEFAULT_USER_AGENT)
+            } else {
+                values.forEach { value ->
+                    okHttpRequestBuilder.addHeader(key, value)
+                }
             }
+        }
+
+        // Defaults if omitted by NewPipeExtractor
+        if (!mergedHeaders.keys.any { it.equals("User-Agent", ignoreCase = true) }) {
+            okHttpRequestBuilder.header("User-Agent", Constants.DEFAULT_USER_AGENT)
+        }
+        if (!mergedHeaders.keys.any { it.equals("Accept-Language", ignoreCase = true) }) {
+            okHttpRequestBuilder.header("Accept-Language", "en-US,en;q=0.9")
         }
 
         val maxRetries = 2
