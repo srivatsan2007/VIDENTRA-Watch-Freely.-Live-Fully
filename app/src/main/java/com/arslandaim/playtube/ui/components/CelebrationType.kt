@@ -75,7 +75,7 @@ enum class CelebrationType(
         buttonText = "Celebrate & Continue 🎈",
         actionUrl = "https://srivatsan-portfolio.vercel.app/",
         actionButtonText = "Send Birthday Wishes 💌",
-        easterEggTriggers = listOf("#birthday", "#srivatsan", "srivatsan birthday")
+        easterEggTriggers = listOf("#birthday", "#srivatsan", "srivatsan birthday", "december 10", "10 december", "#december10")
     );
 
     /**
