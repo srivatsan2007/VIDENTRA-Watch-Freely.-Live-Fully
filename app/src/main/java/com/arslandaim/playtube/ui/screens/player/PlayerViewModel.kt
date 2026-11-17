@@ -58,7 +58,8 @@ class PlayerViewModel @Inject constructor(
     @ApplicationScope private val externalScope: CoroutineScope,
     val miniPlayerManager: MiniPlayerManager,
     val sleepTimerManager: SleepTimerManager,
-    val queueManager: QueueManager
+    val queueManager: QueueManager,
+    val watchPartyManager: com.arslandaim.playtube.data.network.WatchPartyManager
 ) : ViewModel() {
 
     val player: Player = playbackManager.player
@@ -223,7 +224,66 @@ class PlayerViewModel @Inject constructor(
     private var isPreloaded = false
     private val sessionHistory = mutableListOf<String>()
 
+    private val _showWatchPartySheet = MutableStateFlow(false)
+    val showWatchPartySheet: StateFlow<Boolean> = _showWatchPartySheet.asStateFlow()
+
+    fun openWatchPartySheet() {
+        _showWatchPartySheet.value = true
+    }
+
+    fun dismissWatchPartySheet() {
+        _showWatchPartySheet.value = false
+    }
+
+    fun loadVideoById(videoId: String, title: String? = null, thumbnailUrl: String? = null) {
+        val dummy = VideoItem(
+            id = videoId,
+            title = title ?: "Watch Party Video",
+            thumbnailUrl = thumbnailUrl ?: "",
+            uploaderName = "",
+            uploaderUrl = null,
+            uploaderThumbnailUrl = null,
+            viewCount = 0,
+            uploadDate = null,
+            duration = 0
+        )
+        loadVideo(dummy)
+    }
+
     init {
+        watchPartyManager.localPositionProvider = { playbackManager.player.currentPosition }
+        watchPartyManager.localIsPlayingProvider = { playbackManager.isPlaying.value }
+        watchPartyManager.localCurrentVideoProvider = { currentVideoItem }
+
+        watchPartyManager.onRemotePlay = {
+            if (!playbackManager.isPlaying.value) {
+                playbackManager.resume()
+            }
+        }
+        watchPartyManager.onRemotePause = {
+            if (playbackManager.isPlaying.value) {
+                playbackManager.pause()
+            }
+        }
+        watchPartyManager.onRemoteSeek = { pos ->
+            playbackManager.player.seekTo(pos)
+        }
+        watchPartyManager.onRemoteChangeVideo = { videoId, title, thumb ->
+            loadVideoById(videoId, title, thumb)
+        }
+        watchPartyManager.onRemoteSyncState = { videoId, title, thumb, pos, isPlaying ->
+            if (currentVideoId != videoId) {
+                loadVideoById(videoId, title, thumb)
+            }
+            if (pos > 0) {
+                playbackManager.player.seekTo(pos)
+            }
+            if (isPlaying && !playbackManager.isPlaying.value) {
+                playbackManager.resume()
+            } else if (!isPlaying && playbackManager.isPlaying.value) {
+                playbackManager.pause()
+            }
+        }
         viewModelScope.launch {
             playbackManager.playbackError.collect { handlePlayerError(it) }
         }
@@ -405,6 +465,9 @@ class PlayerViewModel @Inject constructor(
         // If we are navigating within the same playlist, don't clear the playlist state to avoid UI flicker
         val keepPlaylist = playlistId != null && playlistId == _currentPlaylist.value?.id
         resetPlaybackState(videoId, video, keepPlaylist)
+        if (watchPartyManager.isHost.value) {
+            watchPartyManager.broadcastChangeVideo(video)
+        }
         
         if (playlistId != null && !keepPlaylist) {
             loadPlaylist(playlistId, playlistTitle)
@@ -750,11 +813,23 @@ class PlayerViewModel @Inject constructor(
     fun togglePlayPause() {
         if (playbackManager.isPlaying.value) {
             playbackManager.pause()
+            if (watchPartyManager.isHost.value) {
+                watchPartyManager.broadcastPause(playbackManager.player.currentPosition)
+            }
         } else {
             playbackManager.resume()
+            if (watchPartyManager.isHost.value) {
+                watchPartyManager.broadcastPlay(playbackManager.player.currentPosition)
+            }
         }
     }
-    fun seekTo(pos: Long) { playbackManager.seekTo(pos); saveWatchProgress() }
+    fun seekTo(pos: Long) {
+        playbackManager.seekTo(pos)
+        saveWatchProgress()
+        if (watchPartyManager.isHost.value) {
+            watchPartyManager.broadcastSeek(pos)
+        }
+    }
     fun setPlaybackSpeed(speed: Float) { 
         _playbackSpeed.value = speed
         playbackManager.setPlaybackSpeed(speed)

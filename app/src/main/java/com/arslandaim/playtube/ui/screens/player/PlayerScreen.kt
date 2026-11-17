@@ -125,6 +125,9 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import com.arslandaim.playtube.utils.VideoChapter
 import kotlinx.coroutines.flow.SharedFlow
+import com.arslandaim.playtube.domain.model.FloatingReaction
+import com.arslandaim.playtube.ui.components.WatchPartySheet
+import com.arslandaim.playtube.ui.components.FloatingReactionOverlay
 
 @UnstableApi
 @Composable
@@ -182,6 +185,8 @@ fun PlayerScreen(
     val activeReplyParent by viewModel.activeReplyParent.collectAsStateWithLifecycle()
     val currentPlaylist by viewModel.currentPlaylist.collectAsStateWithLifecycle()
     val playlistIndex by viewModel.playlistIndex.collectAsStateWithLifecycle()
+    val showWatchPartySheet by viewModel.showWatchPartySheet.collectAsStateWithLifecycle()
+    val currentPartyRoomCode by viewModel.watchPartyManager.currentRoomCode.collectAsStateWithLifecycle()
     val syncTransition = rememberSyncShimmerTransition()
 
     var activeCues by remember { mutableStateOf<List<Cue>>(emptyList()) }
@@ -316,8 +321,18 @@ fun PlayerScreen(
             playlistIndex = playlistIndex,
             onPlaylistVideoClick = { video ->
                 currentPlaylist?.let { viewModel.loadVideo(video, it.id, it.title) }
-            }
+            },
+            isPartyActive = currentPartyRoomCode != null,
+            onPartyClick = { viewModel.openWatchPartySheet() },
+            floatingReactions = viewModel.watchPartyManager.floatingReactions
         )
+
+    if (showWatchPartySheet) {
+        WatchPartySheet(
+            watchPartyManager = viewModel.watchPartyManager,
+            onDismiss = { viewModel.dismissWatchPartySheet() }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -412,7 +427,10 @@ private fun PlayerContent(
     onCloseReplies: () -> Unit,
     currentPlaylist: com.arslandaim.playtube.domain.model.PlaylistDetails?,
     playlistIndex: Int,
-    onPlaylistVideoClick: (VideoItem) -> Unit
+    onPlaylistVideoClick: (VideoItem) -> Unit,
+    isPartyActive: Boolean = false,
+    onPartyClick: () -> Unit = {},
+    floatingReactions: SharedFlow<FloatingReaction>? = null
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -1008,6 +1026,14 @@ private fun PlayerContent(
                                         modifier = Modifier.fillMaxSize()
                                     )
 
+                                    // Floating reactions overlay from Watch Party
+                                    if (floatingReactions != null) {
+                                        FloatingReactionOverlay(
+                                            floatingReactions = floatingReactions,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    }
+
                                     // 2x Speed Boost Pill Overlay
                                     if (isSpeedBoostActive) {
                                         Surface(
@@ -1233,11 +1259,13 @@ private fun PlayerContent(
                                         isWatchLater = isWatchLater,
                                         isDownloaded = downloadedIds.contains(videoId),
                                         repeatMode = repeatMode,
+                                        isPartyActive = isPartyActive,
                                         comments = comments,
                                         commentCount = null, // Extractor doesn't always provide count easily
                                         onToggleSubscription = onToggleSubscription,
                                         onToggleFavorite = { onToggleFavorite(null) },
                                         onToggleWatchLater = onToggleWatchLater,
+                                        onPartyClick = onPartyClick,
                                         onSaveClick = { 
                                             uiState.bundle.let { bundle ->
                                                 onAddToPlaylistClick(
@@ -1306,10 +1334,12 @@ private fun PlayerContent(
                                         isSaved = isSaved,
                                         isDownloaded = false,
                                         repeatMode = repeatMode,
+                                        isPartyActive = isPartyActive,
                                         comments = emptyList(),
                                         commentCount = null,
                                         onToggleSubscription = onToggleSubscription,
                                         onToggleFavorite = { onToggleFavorite(null) },
+                                        onPartyClick = onPartyClick,
                                         onSaveClick = {
                                             onAddToPlaylistClick(
                                                 VideoItem(

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material.icons.outlined.WatchLater
 import androidx.compose.material.icons.filled.BrightnessLow
@@ -82,6 +83,7 @@ fun UnifiedMetadataHub(
     isWatchLater: Boolean = false,
     isDownloaded: Boolean,
     repeatMode: RepeatMode,
+    isPartyActive: Boolean = false,
     comments: List<CommentItem>,
     commentCount: Int?,
     onToggleSubscription: () -> Unit,
@@ -91,6 +93,7 @@ fun UnifiedMetadataHub(
     onDownloadClick: () -> Unit,
     onShareClick: () -> Unit,
     onRepeatClick: () -> Unit,
+    onPartyClick: () -> Unit = {},
     onChannelClick: (String) -> Unit,
     onCommentsClick: () -> Unit
 ) {
@@ -129,12 +132,14 @@ fun UnifiedMetadataHub(
             isWatchLater = isWatchLater,
             isDownloaded = isDownloaded,
             repeatMode = repeatMode,
+            isPartyActive = isPartyActive,
             onToggleFavorite = onToggleFavorite,
             onSaveClick = onSaveClick,
             onToggleWatchLater = onToggleWatchLater,
             onDownloadClick = onDownloadClick,
             onShareClick = onShareClick,
-            onRepeatClick = onRepeatClick
+            onRepeatClick = onRepeatClick,
+            onPartyClick = onPartyClick
         )
         
         Spacer(modifier = Modifier.height(10.dp))
@@ -392,12 +397,14 @@ fun PlayerActionRow(
     isWatchLater: Boolean = false,
     isDownloaded: Boolean,
     repeatMode: RepeatMode,
+    isPartyActive: Boolean = false,
     onToggleFavorite: () -> Unit,
     onSaveClick: () -> Unit,
     onToggleWatchLater: () -> Unit = {},
     onDownloadClick: () -> Unit,
     onShareClick: () -> Unit,
-    onRepeatClick: () -> Unit
+    onRepeatClick: () -> Unit,
+    onPartyClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -406,6 +413,13 @@ fun PlayerActionRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        PlayerActionPill(
+            icon = Icons.Default.Groups,
+            label = if (isPartyActive) "In Party 🍿" else "Watch Party",
+            active = isPartyActive,
+            onClick = onPartyClick
+        )
+
         PlayerActionPill(
             icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
             label = if (isFavorite) stringResource(R.string.liked) else stringResource(R.string.like),
