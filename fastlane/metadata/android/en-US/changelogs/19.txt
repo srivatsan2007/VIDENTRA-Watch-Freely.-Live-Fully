@@ -1,0 +1,20 @@
+
+**What's changed:**
+### Playback & Audio
+* **Audio-Only Mode:** Stream or play media in the background without loading video.
+* **Playback Controls:** Added Volume Boost, an A-B Repeat loop, and an interactive Video Chapters sheet.
+* **Bug Fixes:** Resolved issues with audio track selection and playback mode switching.
+
+### Downloads & Subtitles
+* **Faster, Reliable Downloads:** Implemented parallel chunked downloading for improved download resilience.
+* **Offline Subtitles:** Added support for downloading subtitles for offline viewing, complete with WebVTT sanitization.
+
+### Home Screen, Settings & UI
+* **PlayTube Engine Insights:** Added a dedicated section in Settings to view user statistical data learned by the PlayTube engine.
+* **Category Chips:** Quickly filter the home feed by Trending, Music, Gaming, and more.
+* **Content Blocking:** Block specific videos and channels directly from the home screen.
+* **Visual Redesign:** Introduced a cleaner, simplified bottom navigation bar and multiple new theme color options.
+
+### Localization & General
+* Added support for the Russian language as well.
+* Various under-the-hood performance improvements and minor bug fixes.
