@@ -203,21 +203,64 @@ class VideoRepositoryImpl @Inject constructor(
     private fun extractVideoStreams(streamInfo: StreamInfo, isLive: Boolean): List<StreamItem> {
         val streamsMap = mutableMapOf<String, StreamItem>()
         if (isLive) {
-            streamInfo.hlsUrl?.takeIf { it.isNotBlank() }?.let { url ->
-                val item = StreamItem(url = url, quality = "Auto (Live)", format = "m3u8", isAdaptive = false)
+            val liveUrl = streamInfo.hlsUrl?.takeIf { it.isNotBlank() }
+                ?: streamInfo.dashMpdUrl?.takeIf { it.isNotBlank() }
+            liveUrl?.let { url ->
+                val format = if (url == streamInfo.dashMpdUrl) "mpd" else "m3u8"
+                val item = StreamItem(url = url, quality = "Auto (Live)", format = format, isAdaptive = false)
                 streamsMap[item.quality] = item
             }
         } else {
-            // Add progressive muxed streams (both video + audio) first
-            streamInfo.videoStreams?.filter { !it.url.isNullOrBlank() }?.forEach {
-                val res = it.getResolution() ?: "Unknown"
-                streamsMap[res] = StreamItem(url = it.url!!, quality = res, format = it.format?.suffix ?: "mp4", isAdaptive = false)
-            }
-            // Add adaptive video-only streams if not already present or higher quality
-            streamInfo.videoOnlyStreams?.filter { !it.url.isNullOrBlank() }?.forEach {
-                val res = it.getResolution() ?: "Unknown"
-                if (!streamsMap.containsKey(res)) {
-                    streamsMap[res] = StreamItem(url = it.url!!, quality = res, format = it.format?.suffix ?: "webm", isAdaptive = true)
+            // 1. Progressive (muxed) streams as initial fallback
+            streamInfo.videoStreams
+                ?.filter { !it.url.isNullOrBlank() }
+                ?.forEach {
+                    val res = it.getResolution() ?: "Unknown"
+                    streamsMap[res] = StreamItem(
+                        url = it.url ?: "",
+                        quality = res,
+                        format = it.format?.suffix ?: "mp4",
+                        isAdaptive = false
+                    )
+                }
+
+            // 2. Adaptive video-only streams override progressive streams across all resolutions.
+            // Prefer WebM (VP9) first because MatroskaExtractor starts immediately on chunked SABR byte-range streams
+            // with C.LENGTH_UNSET without requiring end-of-file moov atom seeks, then MP4 (AVC1), and avoid yt_otf streams.
+            streamInfo.videoOnlyStreams
+                ?.filter { !it.url.isNullOrBlank() }
+                ?.groupBy { it.getResolution() ?: "Unknown" }
+                ?.forEach { (res, group) ->
+                    val nonOtfGroup = group.filter { it.url?.contains("source=yt_otf") != true }
+                    val candidates = nonOtfGroup.ifEmpty { group }
+                    val bestAdaptive = candidates.maxWithOrNull(
+                        compareBy<VideoStream> { stream ->
+                            val codec = stream.codec?.lowercase() ?: ""
+                            val suffix = stream.format?.suffix?.lowercase() ?: ""
+                            when {
+                                codec.startsWith("vp9") || codec.startsWith("vp09") || suffix == "webm" -> 3
+                                codec.startsWith("avc1") || (suffix == "mp4" && !codec.startsWith("av01")) -> 2
+                                else -> 1
+                            }
+                        }.thenBy { it.bitrate }
+                    )
+                    if (bestAdaptive != null) {
+                        streamsMap[res] = StreamItem(
+                            url = bestAdaptive.url ?: "",
+                            quality = res,
+                            format = bestAdaptive.format?.suffix ?: "webm",
+                            isAdaptive = true
+                        )
+                    }
+                }
+
+            // 3. Fallback to HLS/DASH manifest if no direct streams were extracted
+            if (streamsMap.isEmpty()) {
+                val fallbackUrl = streamInfo.hlsUrl?.takeIf { it.isNotBlank() }
+                    ?: streamInfo.dashMpdUrl?.takeIf { it.isNotBlank() }
+                fallbackUrl?.let { url ->
+                    val format = if (url == streamInfo.dashMpdUrl) "mpd" else "m3u8"
+                    streamsMap["Auto"] = StreamItem(url = url, quality = "Auto", format = format, isAdaptive = false)
                 }
             }
         }
