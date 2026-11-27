@@ -72,6 +72,7 @@ class YouTubeDownloader(
 
         // Bypass YouTube Consent/GDPR redirection in Europe & attach authenticated session
         if (url.contains("youtube.com")) {
+            val isPlayerRequest = url.contains("/youtubei/v1/player")
             val existingCookies = (mergedHeaders["Cookie"] ?: mutableListOf()).flatMap { it.split(";") }
                 .map { it.trim() }
                 .filter { it.isNotEmpty() }
@@ -81,22 +82,26 @@ class YouTubeDownloader(
                 existingCookies.add(Constants.YouTube.CONSENT_COOKIE)
             }
 
-            refreshAuthCache()
-            if (cachedIsLoggedIn && !cachedAuthCookies.isNullOrBlank()) {
-                val cookies = cachedAuthCookies!!
-                existingCookies.addAll(cookies.split(";").map { it.trim() }.filter { it.isNotEmpty() })
+            // Never inject web session cookies or SAPISIDHASH into /youtubei/v1/player requests:
+            // NewPipeExtractor uses Android/iOS/Embedded player clients that reject web cookies/SAPISIDHASH with 400/403.
+            if (!isPlayerRequest) {
+                refreshAuthCache()
+                if (cachedIsLoggedIn && !cachedAuthCookies.isNullOrBlank()) {
+                    val cookies = cachedAuthCookies!!
+                    existingCookies.addAll(cookies.split(";").map { it.trim() }.filter { it.isNotEmpty() })
 
-                // Only attach InnerTube API headers to youtubei/v1 endpoints
-                if (url.contains("youtube.com/youtubei/v1/")) {
-                    val sapisid = YouTubeAuthHelper.extractSapisid(cookies)
-                    if (sapisid != null && !mergedHeaders.containsKey("Authorization")) {
-                        val authHeader = YouTubeAuthHelper.generateSapisidHash(sapisid, "https://www.youtube.com")
-                        mergedHeaders["Authorization"] = mutableListOf(authHeader)
-                        mergedHeaders["X-Origin"] = mutableListOf("https://www.youtube.com")
-                        mergedHeaders["Referer"] = mutableListOf("https://www.youtube.com/")
-                    }
-                    if (!cachedVisitorData.isNullOrBlank() && !mergedHeaders.containsKey("X-Goog-Visitor-Id")) {
-                        mergedHeaders["X-Goog-Visitor-Id"] = mutableListOf(cachedVisitorData!!)
+                    // Only attach InnerTube API headers to non-player youtubei/v1 endpoints
+                    if (url.contains("youtube.com/youtubei/v1/")) {
+                        val sapisid = YouTubeAuthHelper.extractSapisid(cookies)
+                        if (sapisid != null && !mergedHeaders.containsKey("Authorization")) {
+                            val authHeader = YouTubeAuthHelper.generateSapisidHash(sapisid, "https://www.youtube.com")
+                            mergedHeaders["Authorization"] = mutableListOf(authHeader)
+                            mergedHeaders["X-Origin"] = mutableListOf("https://www.youtube.com")
+                            mergedHeaders["Referer"] = mutableListOf("https://www.youtube.com/")
+                        }
+                        if (!cachedVisitorData.isNullOrBlank() && !mergedHeaders.containsKey("X-Goog-Visitor-Id")) {
+                            mergedHeaders["X-Goog-Visitor-Id"] = mutableListOf(cachedVisitorData!!)
+                        }
                     }
                 }
             }

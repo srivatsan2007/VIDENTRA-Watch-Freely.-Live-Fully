@@ -40,6 +40,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.arslandaim.playtube.utils.rememberScrollVisibilityConnection
 import com.arslandaim.playtube.ui.components.ThumbnailImage
 import com.arslandaim.playtube.utils.VideoUtils
+import com.arslandaim.playtube.data.network.AccountPlaylist
+import com.arslandaim.playtube.data.network.AccountVideo
 
 @Composable
 fun LibraryScreen(
@@ -67,6 +69,10 @@ fun LibraryScreen(
     val savedVideoIds by viewModel.savedVideoIds.collectAsStateWithLifecycle()
     val watchLaterPlaylist by viewModel.watchLaterPlaylist.collectAsStateWithLifecycle()
     val watchLaterVideos by viewModel.watchLaterVideos.collectAsStateWithLifecycle()
+    val ytAccountPlaylists by viewModel.ytAccountPlaylists.collectAsStateWithLifecycle()
+    val ytAccountHistory by viewModel.ytAccountHistory.collectAsStateWithLifecycle()
+    val ytWatchLater by viewModel.ytWatchLater.collectAsStateWithLifecycle()
+    val isYtDataLoading by viewModel.isYtDataLoading.collectAsStateWithLifecycle()
 
     LibraryDashboard(
         downloads = downloads,
@@ -78,6 +84,10 @@ fun LibraryScreen(
         savedVideoIds = savedVideoIds,
         watchLaterPlaylist = watchLaterPlaylist,
         watchLaterVideos = watchLaterVideos,
+        ytAccountPlaylists = ytAccountPlaylists,
+        ytAccountHistory = ytAccountHistory,
+        ytWatchLater = ytWatchLater,
+        isYtDataLoading = isYtDataLoading,
         isYouTubeLoggedIn = isYouTubeLoggedIn,
         youtubeUserName = youtubeUserName,
         youtubeUserEmail = youtubeUserEmail,
@@ -113,6 +123,10 @@ private fun LibraryDashboard(
     savedVideoIds: Set<String>,
     watchLaterPlaylist: com.arslandaim.playtube.data.local.LocalPlaylistEntity? = null,
     watchLaterVideos: List<com.arslandaim.playtube.data.local.LocalPlaylistVideoEntity> = emptyList(),
+    ytAccountPlaylists: List<AccountPlaylist> = emptyList(),
+    ytAccountHistory: List<AccountVideo> = emptyList(),
+    ytWatchLater: List<AccountVideo> = emptyList(),
+    isYtDataLoading: Boolean = false,
     isYouTubeLoggedIn: Boolean = false,
     youtubeUserName: String? = null,
     youtubeUserEmail: String? = null,
@@ -167,15 +181,128 @@ private fun LibraryDashboard(
             item {
                 LibraryShortcutsRow(
                     downloadCount = downloads.size,
-                    watchLaterCount = watchLaterVideos.size,
-                    historyCount = history.size,
+                    watchLaterCount = watchLaterVideos.size + ytWatchLater.size,
+                    historyCount = history.size + ytAccountHistory.size,
                     onSeeAllDownloads = onSeeAllDownloads,
                     onWatchLaterClick = {
-                        watchLaterPlaylist?.let { onPlaylistClick("local:${it.id}") }
+                        if (watchLaterPlaylist != null && watchLaterVideos.isNotEmpty()) {
+                            onPlaylistClick("local:${watchLaterPlaylist.id}")
+                        } else if (isYouTubeLoggedIn) {
+                            onPlaylistClick("WL")
+                        } else {
+                            watchLaterPlaylist?.let { onPlaylistClick("local:${it.id}") }
+                        }
                     },
                     onSeeAllHistory = onSeeAllHistory
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // YouTube Account Watch Later Section (when signed in with Google and present)
+            if (isYouTubeLoggedIn && ytWatchLater.isNotEmpty()) {
+                item {
+                    ModernSectionHeader(
+                        title = "YouTube Watch Later",
+                        icon = Icons.Default.WatchLater,
+                        onSeeAllClick = { onPlaylistClick("WL") }
+                    )
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        items(ytWatchLater.take(15)) { video ->
+                            YouTubeAccountVideoCard(
+                                video = video,
+                                onClick = {
+                                    onVideoClick(
+                                        VideoItem(
+                                            id = video.videoId,
+                                            title = video.title,
+                                            thumbnailUrl = video.thumbnailUrl,
+                                            uploaderName = video.channelName,
+                                            uploaderUrl = null,
+                                            uploaderThumbnailUrl = null,
+                                            viewCount = 0,
+                                            uploadDate = null,
+                                            rawUploadDate = null,
+                                            duration = 0L
+                                        )
+                                    )
+                                }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(18.dp))
+                }
+            }
+
+            // YouTube Account Watch History Section (when signed in with Google and present)
+            if (isYouTubeLoggedIn && ytAccountHistory.isNotEmpty()) {
+                item {
+                    ModernSectionHeader(
+                        title = "YouTube Watch History",
+                        icon = Icons.Default.History,
+                        showSeeAll = false
+                    )
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        items(ytAccountHistory.take(15)) { video ->
+                            YouTubeAccountVideoCard(
+                                video = video,
+                                onClick = {
+                                    onVideoClick(
+                                        VideoItem(
+                                            id = video.videoId,
+                                            title = video.title,
+                                            thumbnailUrl = video.thumbnailUrl,
+                                            uploaderName = video.channelName,
+                                            uploaderUrl = null,
+                                            uploaderThumbnailUrl = null,
+                                            viewCount = 0,
+                                            uploadDate = null,
+                                            rawUploadDate = null,
+                                            duration = 0L
+                                        )
+                                    )
+                                }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(18.dp))
+                }
+            }
+
+            // YouTube Account Playlists Section (when signed in with Google and present)
+            if (isYouTubeLoggedIn && ytAccountPlaylists.isNotEmpty()) {
+                item {
+                    ModernSectionHeader(
+                        title = "YouTube Playlists",
+                        icon = Icons.AutoMirrored.Filled.PlaylistPlay,
+                        showSeeAll = false
+                    )
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        items(ytAccountPlaylists) { ytPlaylist ->
+                            ModernPlaylistCard(
+                                playlist = com.arslandaim.playtube.data.local.PlaylistFavoriteEntity(
+                                    playlistId = ytPlaylist.playlistId,
+                                    title = ytPlaylist.title,
+                                    uploaderName = if (ytPlaylist.videoCount > 0) "${ytPlaylist.videoCount} videos" else "YouTube Playlist",
+                                    thumbnailUrl = ytPlaylist.thumbnailUrl ?: ""
+                                ),
+                                onClick = { onPlaylistClick(ytPlaylist.playlistId) }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(18.dp))
+                }
             }
 
             // Watch Later Section (if has videos)
@@ -405,6 +532,68 @@ private fun LibraryDashboard(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun YouTubeAccountVideoCard(
+    video: AccountVideo,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .width(180.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(18.dp))
+        ) {
+            ThumbnailImage(
+                videoId = video.videoId,
+                thumbnailUrl = video.thumbnailUrl,
+                quality = com.arslandaim.playtube.ui.components.ThumbnailQuality.High,
+                modifier = Modifier.fillMaxSize()
+            )
+            if (video.duration.isNotBlank()) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp),
+                    color = Color.Black.copy(alpha = 0.75f),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = video.duration,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            text = video.title,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        if (video.channelName.isNotBlank()) {
+            Text(
+                text = video.channelName,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
         }
     }
 }

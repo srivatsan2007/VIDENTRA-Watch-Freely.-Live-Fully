@@ -7,6 +7,7 @@ package com.arslandaim.playtube.data.repository
 
 import android.util.LruCache
 import com.arslandaim.playtube.data.local.PreferencesManager
+import com.arslandaim.playtube.data.network.InnerTubeClient
 import com.arslandaim.playtube.data.network.NewPipeInitializer
 import com.arslandaim.playtube.domain.model.*
 import com.arslandaim.playtube.domain.repository.VideoRepository
@@ -33,7 +34,8 @@ import javax.inject.Singleton
 @Singleton
 class VideoRepositoryImpl @Inject constructor(
     private val preferencesManager: PreferencesManager,
-    private val initializer: NewPipeInitializer
+    private val initializer: NewPipeInitializer,
+    private val innerTubeClient: InnerTubeClient
 ) : VideoRepository {
     private val streamCache = LruCache<String, StreamBundle>(Constants.STREAM_CACHE_SIZE)
     private val commentsCache = LruCache<String, CommentsInfoItem>(100)
@@ -54,8 +56,13 @@ class VideoRepositoryImpl @Inject constructor(
             }
         }
         
+        // If forceRefresh is requested while a fresh bundle is already cached, playback likely failed (e.g. 403).
+        // Skip NewPipe and go directly to InnerTube Android/iOS client for fresh bypass streams.
+        val skipNewPipe = forceRefresh && streamCache.get(videoId) != null
+
         return withContext(Dispatchers.IO) {
-            try {
+            // ---- Attempt 1: NewPipe extractor (fastest, most metadata) ----
+            if (!skipNewPipe) try {
                 val service = ServiceList.YouTube
                 val videoUrl = Constants.YouTube.VIDEO_URL_PREFIX + videoId
                 val streamInfo = StreamInfo.getInfo(service, videoUrl)
@@ -69,45 +76,125 @@ class VideoRepositoryImpl @Inject constructor(
                 val subtitlesDeferred = async { extractSubtitles(streamInfo) }
 
                 val bestAudioStream = selectBestAudioStream(streamInfo)
-
                 val videoStreams = videoStreamsDeferred.await()
-                val isUpcoming = (isLive && videoStreams.isEmpty()) || streamInfo.viewCount == -1L
-                val scheduledStartTime = if (isUpcoming) {
-                    streamInfo.uploadDate?.offsetDateTime()?.toString() ?: streamInfo.textualUploadDate
+                val audioStreams = audioStreamsDeferred.await()
+
+                // If we got valid streams from NewPipe, use them
+                if (videoStreams.isNotEmpty() || audioStreams.isNotEmpty() || isLive) {
+                    val isUpcoming = (isLive && videoStreams.isEmpty()) || streamInfo.viewCount == -1L
+                    val scheduledStartTime = if (isUpcoming) {
+                        streamInfo.uploadDate?.offsetDateTime()?.toString() ?: streamInfo.textualUploadDate
+                    } else null
+
+                    val bundle = StreamBundle(
+                        videoStreams = videoStreams,
+                        audioStreams = audioStreams,
+                        title = streamInfo.name ?: "Unknown",
+                        uploaderName = streamInfo.uploaderName ?: "Unknown",
+                        uploaderUrl = streamInfo.uploaderUrl,
+                        uploaderThumbnailUrl = streamInfo.uploaderAvatars.maxByOrNull { it.width }?.url ?: streamInfo.uploaderAvatars.firstOrNull()?.url,
+                        uploaderSubscriberCount = streamInfo.uploaderSubscriberCount,
+                        description = VideoUtils.sanitizeDescription(streamInfo.description?.content),
+                        viewCount = streamInfo.viewCount,
+                        uploadDate = streamInfo.textualUploadDate ?: streamInfo.uploadDate?.offsetDateTime()?.toLocalDate()?.toString(),
+                        thumbnailUrl = streamInfo.thumbnails.maxByOrNull { it.width }?.url ?: VideoUtils.getBestThumbnailUrl(videoId),
+                        isLive = isLive,
+                        isUpcoming = isUpcoming,
+                        scheduledStartTime = scheduledStartTime,
+                        relatedVideos = streamInfo.relatedItems
+                            ?.filterIsInstance<StreamInfoItem>()
+                            ?.filterNot { it.isShortVideo() }
+                            ?.map { mapToVideoItem(it) } ?: emptyList(),
+                        nextRelatedVideosPage = null,
+                        bestAudioStreamUrl = bestAudioStream?.url,
+                        progressiveFallbackUrl = streamInfo.videoStreams
+                            ?.filter { !it.url.isNullOrBlank() }
+                            ?.maxByOrNull { it.getResolution()?.filter { c -> c.isDigit() }?.toIntOrNull() ?: 0 }
+                            ?.url,
+                        subtitles = subtitlesDeferred.await()
+                    )
+                    if (!isIncognito) streamCache.put(videoId, bundle)
+                    return@withContext bundle
+                }
+
+                PTLog.w("VideoRepository", "NewPipe returned empty streams for $videoId — falling back to InnerTube")
+            } catch (e: Exception) {
+                PTLog.w("VideoRepository", "NewPipe extraction failed for $videoId (${e.message}) — falling back to InnerTube")
+            }
+
+            // ---- Attempt 2: InnerTube Android/iOS client (bypasses PoToken requirement) ----
+            try {
+                val cookieString = if (preferencesManager.isYouTubeLoggedIn.first()) {
+                    preferencesManager.youtubeAuthCookies.first()
                 } else null
 
+                val innerTubeStreams = innerTubeClient.fetchStreams(videoId, cookieString)
+                    ?: throw Exception("InnerTube returned no streams for $videoId")
+
+                val videoStreams = mutableListOf<StreamItem>()
+                val audioStreams = mutableListOf<StreamItem>()
+
+                // Map InnerTube video streams → StreamItem
+                val qualitySeen = mutableSetOf<String>()
+                for (s in innerTubeStreams.videoStreams) {
+                    val quality = s.qualityLabel.ifBlank { s.quality }
+                    if (quality.isBlank() || !qualitySeen.add(quality)) continue
+                    val format = when {
+                        s.mimeType.contains("webm") -> "webm"
+                        s.mimeType.contains("mp4") -> "mp4"
+                        else -> "mp4"
+                    }
+                    // isAdaptive = true only for video-only streams (no embedded audio)
+                    val isAdaptive = s.isVideo && !s.isAudio
+                    videoStreams.add(StreamItem(url = s.url, quality = quality, format = format, isAdaptive = isAdaptive))
+                }
+                videoStreams.sortByDescending { it.quality.filter { c -> c.isDigit() }.toIntOrNull() ?: 0 }
+
+                // Map InnerTube audio streams → StreamItem
+                for (s in innerTubeStreams.audioStreams) {
+                    val format = when {
+                        s.mimeType.contains("webm") -> "webm"
+                        s.mimeType.contains("mp4") -> "m4a"
+                        else -> "m4a"
+                    }
+                    audioStreams.add(StreamItem(url = s.url, quality = s.quality, format = format))
+                }
+
+                // For live streams, prefer HLS manifest
+                val finalVideoStreams: List<StreamItem> = if (innerTubeStreams.isLive && innerTubeStreams.hlsManifestUrl != null) {
+                    listOf(StreamItem(url = innerTubeStreams.hlsManifestUrl, quality = "Auto (Live)", format = "m3u8", isAdaptive = false))
+                } else {
+                    videoStreams
+                }
+
+                val bestAudioUrl = audioStreams.firstOrNull()?.url
+
                 val bundle = StreamBundle(
-                    videoStreams = videoStreams,
-                    audioStreams = audioStreamsDeferred.await(),
-                    title = streamInfo.name ?: "Unknown",
-                    uploaderName = streamInfo.uploaderName ?: "Unknown",
-                    uploaderUrl = streamInfo.uploaderUrl,
-                    uploaderThumbnailUrl = streamInfo.uploaderAvatars.maxByOrNull { it.width }?.url ?: streamInfo.uploaderAvatars.firstOrNull()?.url,
-                    uploaderSubscriberCount = streamInfo.uploaderSubscriberCount,
-                    description = VideoUtils.sanitizeDescription(streamInfo.description?.content),
-                    viewCount = streamInfo.viewCount,
-                    uploadDate = streamInfo.textualUploadDate ?: streamInfo.uploadDate?.offsetDateTime()?.toLocalDate()?.toString(),
-                    thumbnailUrl = streamInfo.thumbnails.maxByOrNull { it.width }?.url ?: VideoUtils.getBestThumbnailUrl(videoId),
-                    isLive = isLive,
-                    isUpcoming = isUpcoming,
-                    scheduledStartTime = scheduledStartTime,
-                    relatedVideos = streamInfo.relatedItems
-                        ?.filterIsInstance<StreamInfoItem>()
-                        ?.filterNot { it.isShortVideo() }
-                        ?.map { mapToVideoItem(it) } ?: emptyList(),
+                    videoStreams = finalVideoStreams,
+                    audioStreams = audioStreams,
+                    title = innerTubeStreams.title ?: "Video",
+                    uploaderName = innerTubeStreams.author ?: "YouTube",
+                    uploaderUrl = innerTubeStreams.channelId?.let { Constants.YouTube.CHANNEL_URL_PREFIX + it },
+                    uploaderThumbnailUrl = null,
+                    uploaderSubscriberCount = -1,
+                    description = null,
+                    viewCount = innerTubeStreams.viewCount,
+                    uploadDate = null,
+                    thumbnailUrl = VideoUtils.getBestThumbnailUrl(videoId),
+                    isLive = innerTubeStreams.isLive,
+                    isUpcoming = false,
+                    scheduledStartTime = null,
+                    relatedVideos = emptyList(),
                     nextRelatedVideosPage = null,
-                    bestAudioStreamUrl = bestAudioStream?.url,
-                    progressiveFallbackUrl = streamInfo.videoStreams
-                        ?.filter { !it.url.isNullOrBlank() }
-                        ?.maxByOrNull { it.getResolution()?.filter { c -> c.isDigit() }?.toIntOrNull() ?: 0 }
-                        ?.url,
-                    subtitles = subtitlesDeferred.await()
+                    bestAudioStreamUrl = bestAudioUrl,
+                    progressiveFallbackUrl = finalVideoStreams.firstOrNull { !it.isAdaptive }?.url,
+                    subtitles = emptyList()
                 )
-                
                 if (!isIncognito) streamCache.put(videoId, bundle)
+                PTLog.d("VideoRepository", "InnerTube fallback succeeded for $videoId: ${finalVideoStreams.size} video, ${audioStreams.size} audio streams")
                 bundle
             } catch (e: Exception) {
-                PTLog.e("VideoRepository", "Error fetching stream bundle for $videoId", e)
+                PTLog.e("VideoRepository", "Both NewPipe and InnerTube failed for $videoId", e)
                 throw e
             }
         }

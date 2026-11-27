@@ -219,6 +219,7 @@ class PlayerViewModel @Inject constructor(
     private var lastFailedPosition = 0L
     private var lastPauseTimestamp = 0L
     private var retryCount = 0
+    private var recoveryCount = 0
     private var retryJob: Job? = null
     private var preloadingJob: Job? = null
     private var isPreloaded = false
@@ -331,6 +332,7 @@ class PlayerViewModel @Inject constructor(
                 if (playing) {
                     isStalledDueToNetwork = false
                     _isRecovering.value = false
+                    recoveryCount = 0
                 } else {
                     saveWatchProgress()
                 }
@@ -601,6 +603,8 @@ class PlayerViewModel @Inject constructor(
 
         playbackManager.setSponsorSegments(emptyList())
         lastPauseTimestamp = 0L
+        recoveryCount = 0
+        retryCount = 0
         if (!sessionHistory.contains(videoId)) {
             sessionHistory.add(videoId)
             if (sessionHistory.size > 10) sessionHistory.removeAt(0)
@@ -722,6 +726,12 @@ class PlayerViewModel @Inject constructor(
 
     private fun recoverExpiredUrl() {
         val videoId = currentVideoId ?: return
+        if (recoveryCount >= 2) {
+            _isRecovering.value = false
+            _uiState.value = PlayerUiState.Error(PlayTubeError.Unknown("Playback error: stream unavailable"))
+            return
+        }
+        recoveryCount++
         _isRecovering.value = true
         viewModelScope.launch {
             // Check if it finished downloading while paused

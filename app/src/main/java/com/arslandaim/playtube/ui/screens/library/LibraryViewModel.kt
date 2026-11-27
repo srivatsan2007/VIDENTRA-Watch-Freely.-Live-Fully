@@ -14,6 +14,10 @@ import com.arslandaim.playtube.data.local.SubscriptionEntity
 import com.arslandaim.playtube.data.local.DownloadStatus
 import com.arslandaim.playtube.data.local.PlaylistFavoriteEntity
 import com.arslandaim.playtube.data.local.PlaylistFavoriteDao
+import com.arslandaim.playtube.data.local.PreferencesManager
+import com.arslandaim.playtube.data.network.AccountPlaylist
+import com.arslandaim.playtube.data.network.AccountVideo
+import com.arslandaim.playtube.data.network.InnerTubeClient
 import com.arslandaim.playtube.domain.usecase.CancelDownloadUseCase
 import com.arslandaim.playtube.domain.usecase.DeleteDownloadUseCase
 import com.arslandaim.playtube.domain.usecase.GetDownloadsUseCase
@@ -48,7 +52,9 @@ class LibraryViewModel @Inject constructor(
     private val toggleSubscriptionUseCase: ToggleSubscriptionUseCase,
     private val syncSubscriptionMetadataUseCase: SyncSubscriptionMetadataUseCase,
     private val playlistFavoriteDao: PlaylistFavoriteDao,
-    private val libraryRepository: com.arslandaim.playtube.domain.repository.LibraryRepository
+    private val libraryRepository: com.arslandaim.playtube.domain.repository.LibraryRepository,
+    private val innerTubeClient: InnerTubeClient,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     val downloads: StateFlow<List<DownloadEntity>> = getDownloadsUseCase()
@@ -124,8 +130,41 @@ class LibraryViewModel @Inject constructor(
     }.flowOn(Dispatchers.Default)
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // ---- YouTube Account Data (playlists, history, Watch Later) ----
+    private val _ytAccountPlaylists = MutableStateFlow<List<AccountPlaylist>>(emptyList())
+    val ytAccountPlaylists: StateFlow<List<AccountPlaylist>> = _ytAccountPlaylists.asStateFlow()
+
+    private val _ytAccountHistory = MutableStateFlow<List<AccountVideo>>(emptyList())
+    val ytAccountHistory: StateFlow<List<AccountVideo>> = _ytAccountHistory.asStateFlow()
+
+    private val _ytWatchLater = MutableStateFlow<List<AccountVideo>>(emptyList())
+    val ytWatchLater: StateFlow<List<AccountVideo>> = _ytWatchLater.asStateFlow()
+
+    private val _isYtDataLoading = MutableStateFlow(false)
+    val isYtDataLoading: StateFlow<Boolean> = _isYtDataLoading.asStateFlow()
+
     init {
         syncSubscriptions()
+        observeYouTubeAccount()
+    }
+
+    private fun observeYouTubeAccount() {
+        viewModelScope.launch {
+            combine(
+                preferencesManager.isYouTubeLoggedIn,
+                preferencesManager.youtubeAuthCookies
+            ) { loggedIn, cookies ->
+                loggedIn to cookies
+            }.collectLatest { (loggedIn, cookies) ->
+                if (loggedIn && !cookies.isNullOrBlank()) {
+                    fetchYouTubeAccountData(cookies)
+                } else {
+                    _ytAccountPlaylists.value = emptyList()
+                    _ytAccountHistory.value = emptyList()
+                    _ytWatchLater.value = emptyList()
+                }
+            }
+        }
     }
 
     private fun syncSubscriptions() {
@@ -233,6 +272,36 @@ class LibraryViewModel @Inject constructor(
             val playlist = libraryRepository.getOrCreateWatchLaterPlaylist()
             libraryRepository.removeVideoFromLocalPlaylist(playlist.id, videoId)
             _snackbarMessage.emit("Removed from Watch Later")
+        }
+    }
+
+    /**
+     * Fetches the authenticated user's YouTube playlists, watch history,
+     * and Watch Later from the InnerTube API using stored session cookies.
+     */
+    fun fetchYouTubeAccountData(cookieString: String) {
+        if (cookieString.isBlank() || _isYtDataLoading.value) return
+        viewModelScope.launch(Dispatchers.IO) {
+            _isYtDataLoading.value = true
+            try {
+                val playlistsJob = launch {
+                    val playlists = innerTubeClient.fetchAccountPlaylists(cookieString)
+                    _ytAccountPlaylists.value = playlists
+                }
+                val historyJob = launch {
+                    val history = innerTubeClient.fetchWatchHistory(cookieString)
+                    _ytAccountHistory.value = history
+                }
+                val watchLaterJob = launch {
+                    val watchLater = innerTubeClient.fetchWatchLater(cookieString)
+                    _ytWatchLater.value = watchLater
+                }
+                playlistsJob.join()
+                historyJob.join()
+                watchLaterJob.join()
+            } finally {
+                _isYtDataLoading.value = false
+            }
         }
     }
 }
