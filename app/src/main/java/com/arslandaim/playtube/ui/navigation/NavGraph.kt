@@ -14,6 +14,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import com.arslandaim.playtube.MainViewModel
 import com.arslandaim.playtube.ui.screens.home.HomeScreen
 import com.arslandaim.playtube.ui.screens.home.HomeViewModel
@@ -235,7 +236,13 @@ fun NavGraph(
                 onBack = { navController.popBackStack() }
             )
         }
-        composable<Destination.Update> {
+        dialog<Destination.Update>(
+            dialogProperties = androidx.compose.ui.window.DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
+                usePlatformDefaultWidth = false
+            )
+        ) {
             val updateViewModel: UpdateViewModel = hiltViewModel(activity)
             com.arslandaim.playtube.ui.screens.settings.UpdateScreen(
                 updateViewModel = updateViewModel,
@@ -389,18 +396,17 @@ fun NavGraph(
         composable<Destination.Onboarding> {
             val viewModel: OnboardingViewModel = hiltViewModel()
             val showWelcome = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
+            InterestsSelectionScreen(
+                viewModel = viewModel,
+                onComplete = {
+                    navController.navigate(Destination.Home) {
+                        popUpTo(Destination.Onboarding) { inclusive = true }
+                    }
+                }
+            )
             if (showWelcome.value) {
                 com.arslandaim.playtube.ui.screens.onboarding.DeveloperWelcomeScreen(
                     onContinue = { showWelcome.value = false }
-                )
-            } else {
-                InterestsSelectionScreen(
-                    viewModel = viewModel,
-                    onComplete = {
-                        navController.navigate(Destination.Home) {
-                            popUpTo(Destination.Onboarding) { inclusive = true }
-                        }
-                    }
                 )
             }
         }
